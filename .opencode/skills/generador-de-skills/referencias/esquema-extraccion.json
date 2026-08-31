@@ -1,0 +1,180 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "description": "Esquema opcional para organizar la información recolectada al investigar documentación técnica, antes de escribir el SKILL.md. No es un formato que deba producir ningún agente externo — es un checklist de qué campos no deben faltar.",
+  "properties": {
+    "skill_name": {
+      "type": "string",
+      "description": "Nombre en hyphen-case para la skill (ej. 'pdf-editor', 'stripe-webhooks')"
+    },
+    "description": {
+      "type": "string",
+      "description": "Descripción completa que incluye CUÁNDO usar la skill. Debe incluir disparadores y casos de uso específicos. Máximo 1024 caracteres."
+    },
+    "overview": {
+      "type": "string",
+      "description": "Resumen de 1-2 frases de lo que habilita la skill"
+    },
+    "triggers": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Frases/escenarios de usuario que deberían activar esta skill ('scrappear este sitio web', 'extraer datos de una URL', etc.)"
+    },
+    "workflows": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Nombre del workflow ('Scraping básico', 'Procesamiento por lotes')"
+          },
+          "description": {
+            "type": "string",
+            "description": "Qué logra este workflow"
+          },
+          "steps": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Instrucciones paso a paso en forma imperativa"
+          },
+          "code_example": {
+            "type": "object",
+            "properties": {
+              "language": { "type": "string" },
+              "code": { "type": "string" }
+            },
+            "description": "Ejemplo de código opcional para este workflow"
+          }
+        },
+        "required": ["name", "description", "steps"]
+      },
+      "description": "Principales workflows/operaciones que soporta la herramienta"
+    },
+    "api_endpoints": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "method": {
+            "type": "string",
+            "enum": ["GET", "POST", "PUT", "PATCH", "DELETE"]
+          },
+          "path": {
+            "type": "string",
+            "description": "Ruta del endpoint de la API (ej. '/v1/scrape')"
+          },
+          "description": {
+            "type": "string",
+            "description": "Qué hace este endpoint"
+          },
+          "parameters": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": { "type": "string" },
+                "type": { "type": "string" },
+                "required": { "type": "boolean" },
+                "description": { "type": "string" },
+                "default": { "type": "string" }
+              },
+              "required": ["name", "type", "required", "description"]
+            }
+          },
+          "response_example": {
+            "type": "string",
+            "description": "Ejemplo de respuesta JSON"
+          }
+        },
+        "required": ["method", "path", "description"]
+      },
+      "description": "Endpoints de la API con sus parámetros (si aplica)"
+    },
+    "authentication": {
+      "type": "object",
+      "properties": {
+        "method": {
+          "type": "string",
+          "description": "Método de autenticación ('API Key', 'Bearer Token', 'OAuth2', etc.)"
+        },
+        "header_name": {
+          "type": "string",
+          "description": "Nombre del header de autenticación ('Authorization', 'X-API-Key')"
+        },
+        "env_variable": {
+          "type": "string",
+          "description": "Nombre sugerido de la variable de entorno"
+        },
+        "details": {
+          "type": "string",
+          "description": "Instrucciones adicionales de autenticación"
+        }
+      },
+      "description": "Cómo autenticarse con el servicio documentado"
+    },
+    "sdk_examples": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "language": {
+            "type": "string",
+            "description": "Lenguaje de programación ('python', 'typescript', 'curl')"
+          },
+          "title": {
+            "type": "string",
+            "description": "Título del ejemplo ('Uso básico', 'Con opciones')"
+          },
+          "code": {
+            "type": "string",
+            "description": "Ejemplo de código completo y ejecutable"
+          },
+          "description": {
+            "type": "string",
+            "description": "Qué demuestra este ejemplo"
+          }
+        },
+        "required": ["language", "code"]
+      },
+      "description": "Ejemplos de código en distintos lenguajes"
+    },
+    "common_patterns": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Patrones de uso comunes y buenas prácticas"
+    },
+    "gotchas": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Errores comunes, casos borde y aspectos a tener en cuenta"
+    },
+    "references_needed": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "filename": {
+            "type": "string",
+            "description": "Nombre de archivo sugerido (ej. 'referencia-api.md', 'ejemplos-avanzados.md')"
+          },
+          "content_type": {
+            "type": "string",
+            "enum": ["api_docs", "examples", "schemas", "configuration", "troubleshooting"]
+          },
+          "description": {
+            "type": "string",
+            "description": "Qué debería contener este archivo de referencia"
+          },
+          "content_summary": {
+            "type": "string",
+            "description": "Resumen del contenido a incluir (se expandirá después)"
+          }
+        },
+        "required": ["filename", "content_type", "description"]
+      },
+      "description": "Archivos de referencia adicionales necesarios para la divulgación progresiva"
+    }
+  },
+  "required": ["skill_name", "description", "overview", "workflows"]
+}

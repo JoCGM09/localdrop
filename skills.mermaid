@@ -1,0 +1,50 @@
+```mermaid
+graph TD
+    subgraph Skills
+        A[cost-guard]
+        B[definicion-de-marca]
+        C[generador-de-skills]
+        D[seguridad-buenas-practicas]
+        E[test-strategy]
+    end
+
+    subgraph Agents
+        F[spec-writer]
+        G[build]
+        H[test-writer]
+        I[security-reviewer]
+    end
+
+    subgraph "Development Process & Artifacts"
+        J(Constitución) --> K[specs/mission.md, specs/tech-stack.md, specs/roadmap.md]
+        L(Nueva Feature) --> M[specs/YYYY-MM-DD-feature/...]
+        N(Implementación) --> O[Código Fuente]
+        P(Testing) --> Q[Reporte de Tests]
+        R(Revisión de Seguridad) --> S[Reporte de Seguridad]
+    end
+
+    A -- "Guía CUALQUIER tarea" --> F
+    A -- "Guía CUALQUIER tarea" --> G
+    A -- "Guía CUALQUIER tarea" --> H
+    A -- "Guía CUALQUIER tarea" --> I
+    
+    B -- "Usada en /feature" --> F
+    F -- "Define" --> J
+    F -- "Define" --> L
+
+    C -- "Genera otras skills" --> C
+
+    D -- "Usada en revisión" --> I
+    I -- "Revisa" --> O
+    I -- "Produce" --> S
+
+    E -- "Guía para escribir tests" --> H
+    H -- "Escribe/corre" --> P
+    
+    G -- "Implementa" --> N
+
+    subgraph "Flujo de Proceso"
+        J --> L --> N --> P --> R
+    end
+
+```

@@ -1,0 +1,73 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "anthropic/claude-sonnet-4-5",
+
+  "instructions": [
+    "AGENTS.md",
+    "specs/mission.md",
+    "specs/tech-stack.md"
+  ],
+
+  "permission": {
+    "edit": "ask",
+    "webfetch": "ask",
+    "bash": {
+      "git status*": "allow",
+      "git diff*": "allow",
+      "git log*": "allow",
+      "git add*": "allow",
+      "git commit*": "ask",
+      "git push*": "deny",
+      "npm test*": "allow",
+      "npm run test*": "allow",
+      "npm run lint*": "allow",
+      "rm -rf*": "deny",
+      "*": "ask"
+    }
+  },
+
+  "agent": {
+    "plan": {
+      "model": "anthropic/claude-haiku-4-5"
+    },
+    "build": {
+      "model": "anthropic/claude-sonnet-4-5",
+      "permission": {
+        "edit": "allow",
+        "bash": { "*": "ask", "git *": "allow", "npm *": "allow" }
+      }
+    },
+
+    "spec-writer": {
+      "mode": "subagent",
+      "description": "Redacta constitution y specs de feature; NUNCA implementa código.",
+      "model": "anthropic/claude-sonnet-4-5",
+      "tools": { "write": true, "edit": true, "bash": false, "webfetch": false }
+    },
+
+    "test-writer": {
+      "mode": "subagent",
+      "description": "Escribe y corre tests a partir de requirements.md/validation.md.",
+      "model": "anthropic/claude-haiku-4-5",
+      "tools": { "write": true, "edit": true, "bash": true, "webfetch": false },
+      "permission": {
+        "edit": "allow",
+        "bash": { "npm test*": "allow", "npm run test*": "allow", "*": "ask" }
+      }
+    },
+
+    "security-reviewer": {
+      "mode": "subagent",
+      "description": "Revisión de seguridad de solo lectura (OWASP, secrets, authZ/authN).",
+      "model": "anthropic/claude-sonnet-4-5",
+      "tools": { "write": false, "edit": false, "bash": false, "webfetch": false }
+    },
+
+    "code-reviewer": {
+      "mode": "subagent",
+      "description": "Revisión de calidad de código de solo lectura, sin editar.",
+      "model": "anthropic/claude-haiku-4-5",
+      "tools": { "write": false, "edit": false, "bash": false, "webfetch": false }
+    }
+  }
+}

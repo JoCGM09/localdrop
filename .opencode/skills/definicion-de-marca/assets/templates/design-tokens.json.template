@@ -1,0 +1,51 @@
+{
+  "$comment": "Generado por la skill definicion-de-marca. Fuente de verdad para código: no redefinir estos valores en cada feature, importar/leer este archivo.",
+  "project": {
+    "name": "<nombre del proyecto>",
+    "tone": ["<adjetivo1>", "<adjetivo2>", "<adjetivo3>"]
+  },
+  "color": {
+    "primary": "#RRGGBB",
+    "accent": "#RRGGBB",
+    "textOnPrimary": "#RRGGBB",
+    "background": "#RRGGBB",
+    "backgroundDark": null,
+    "semantic": {
+      "success": null,
+      "error": null,
+      "warning": null,
+      "info": null
+    },
+    "gradient": {
+      "from": null,
+      "to": null
+    }
+  },
+  "typography": {
+    "fontPrimary": "<familia>",
+    "fontSecondary": null,
+    "scale": {
+      "xs": "12px",
+      "sm": "14px",
+      "base": "16px",
+      "lg": "18px",
+      "xl": "24px",
+      "2xl": "32px",
+      "3xl": "48px"
+    },
+    "weights": {
+      "regular": 400,
+      "medium": 500,
+      "bold": 700
+    }
+  },
+  "contrastChecks": [
+    {
+      "foreground": "#RRGGBB",
+      "background": "#RRGGBB",
+      "ratio": null,
+      "passesAA": null,
+      "passesAAA": null
+    }
+  ]
+}

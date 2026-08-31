@@ -1,0 +1,59 @@
+```mermaid
+graph TD
+    A[Start] --> B{Paso 1: Constitución};
+    B --> C[/constitution con spec-writer];
+    C --> D{Genera specs iniciales};
+    D --> E[specs/mission.md];
+    D --> F[specs/tech-stack.md];
+    D --> G[specs/roadmap.md];
+    
+    H{Paso 2: Nueva Feature} --> I[/feature con spec-writer];
+    I --> J{Genera specs de feature};
+    J --> K[specs/YYYY-MM-DD-feature/requirements.md];
+    J --> L[specs/YYYY-MM-DD-feature/plan.md];
+    J --> M[specs/YYYY-MM-DD-feature/validation.md];
+
+    N{Paso 3: Implementar} --> O[/implement con build];
+    O --> P{Escribe código según plan.md};
+    P --> Q{Repetir hasta completar plan.md};
+    
+    R{Paso 4: Testing} --> S[/test con test-writer];
+    S --> T{Escribe y corre tests};
+    T --> U[Resultados de tests];
+
+    V{Paso 5: Seguridad} --> W[/security-review con security-reviewer];
+    W --> X{Revisa contra checklist de seguridad};
+    X --> Y[Reporte de seguridad];
+
+    Z{Paso 6: Merge} --> AA{Checklist en validation.md};
+    AA --> BB[Tests OK?];
+    AA --> CC[Seguridad OK?];
+    AA --> DD[plan.md completo?];
+    
+    subgraph Workflow
+        direction LR
+        A -- Completado --> H;
+        G -- Guía --> H;
+        M -- Guía --> N;
+        Q -- Completo --> R;
+        U -- OK --> V;
+        Y -- OK --> Z;
+    end
+
+    subgraph Artifacts
+        direction TB
+        E; F; G; K; L; M; U; Y;
+    end
+
+    subgraph Agents & Commands
+        direction TB
+        C; I; O; S; W;
+    end
+    
+    DD -- Sí --> EE[Merge a main];
+    BB -- Sí --> V;
+    CC -- Sí --> Z;
+    
+    BB -- No --> N;
+    CC -- No --> N;
+```

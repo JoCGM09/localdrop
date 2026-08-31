@@ -1,0 +1,28 @@
+# AGENTS.md — <nombre del proyecto>
+
+Mantén este archivo corto. Es contexto que se carga siempre. Detalle extenso va en `specs/<feature>.md`, referenciado desde acá.
+
+## Convenciones del proyecto
+- Estilo de commits: <ej. Conventional Commits>
+- Estructura de carpetas: <breve descripción o puntero a un archivo>
+- Naming: <convenciones de nombres relevantes>
+
+## Decisiones de arquitectura ya tomadas
+- <decisión> — <razón en 1-2 líneas> — <fecha o feature que la originó>
+
+## Requisitos de negocio confirmados
+- Ver `specs/requirements.md` para el detalle completo.
+- Resumen de los más críticos:
+  - <requisito 1>
+  - <requisito 2>
+
+## Deuda técnica conocida
+- <ítem> — prioridad: <alta/media/baja>
+
+## Config de entorno para correr localmente
+- <rutas, variables de entorno necesarias — NO secretos>
+
+## Features
+| Feature | Estado | Spec |
+|---|---|---|
+| <nombre> | <en progreso/hecho> | `specs/<nombre>.md` |
