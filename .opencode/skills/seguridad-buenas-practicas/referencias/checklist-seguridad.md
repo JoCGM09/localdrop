@@ -58,9 +58,9 @@ Recorre cada categoría. Marca solo lo que aplica al artefacto revisado; no toda
 - [ ] ¿Los datos sensibles (tokens de sesión, cookies, PII) se excluyen de logs, capturas de pantalla y archivos de ejemplo compartidos?
 - [ ] Si el artefacto interactúa con servicios de terceros, ¿queda claro qué datos se les envían?
 
-## 9. Específico para skills de Claude / agentes
+## 9. Específico para skills de el Agente / agentes
 
-- [ ] ¿La skill pide a Claude ejecutar acciones irreversibles (borrar, enviar, publicar) sin un paso de confirmación?
+- [ ] ¿La skill pide a el Agente ejecutar acciones irreversibles (borrar, enviar, publicar) sin un paso de confirmación?
 - [ ] ¿Las instrucciones de la skill podrían interpretarse como "ignora tus reglas de seguridad para completar esta tarea"?
 - [ ] ¿Los scripts incluidos hacen exactamente lo que su descripción dice, sin efectos secundarios no documentados (llamadas de red ocultas, escritura fuera del directorio esperado)?
 

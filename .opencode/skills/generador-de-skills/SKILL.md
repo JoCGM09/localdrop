@@ -78,7 +78,7 @@ Si una página relevante no es accesible (requiere login, está detrás de un pa
 
 ## Referencias
 
-- `referencias/plantilla-prompt-extraccion.md` — checklist completo de qué información no debe faltar al investigar la documentación (identidad de la skill, workflows, endpoints, autenticación, ejemplos, gotchas), pensado para que Claude lo siga por sí mismo mientras usa `web_search`/`web_fetch`.
+- `referencias/plantilla-prompt-extraccion.md` — checklist completo de qué información no debe faltar al investigar la documentación (identidad de la skill, workflows, endpoints, autenticación, ejemplos, gotchas), pensado para que el Agente lo siga por sí mismo mientras usa `web_search`/`web_fetch`.
 - `referencias/esquema-extraccion.json` — esquema JSON opcional para organizar la información recolectada antes de escribir el `SKILL.md`; también sirve como checklist de qué campos no deben faltar.
 - `referencias/patrones-de-salida.md` — cómo estructurar la salida de una skill (plantillas estrictas vs. flexibles, patrón de ejemplos).
 - `referencias/patrones-de-flujo.md` — cómo describir flujos de trabajo secuenciales y condicionales dentro de un `SKILL.md`.

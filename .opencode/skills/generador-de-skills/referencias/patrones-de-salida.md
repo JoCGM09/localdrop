@@ -79,4 +79,4 @@ Usar timestamps UTC de forma consistente en la generación de reportes
 Sigue este estilo: tipo(alcance): descripción breve, luego explicación detallada.
 ```
 
-Los ejemplos ayudan a Claude a entender el estilo y nivel de detalle deseado con más claridad que las descripciones por sí solas.
+Los ejemplos ayudan a el Agente a entender el estilo y nivel de detalle deseado con más claridad que las descripciones por sí solas.

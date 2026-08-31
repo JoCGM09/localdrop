@@ -1,17 +1,17 @@
 ---
 name: generador-de-skills
-description: Genera automáticamente Claude Skills completas (SKILL.md + referencias + scripts) a partir de documentación técnica, investigando esa documentación directamente con las herramientas propias de Claude (búsqueda y lectura web) — sin agentes externos ni configuración de API keys. Usa esta skill siempre que el usuario pida "crear una skill a partir de esta documentación", "convertir esta API en una skill", "generar una skill para [servicio]", quiera scaffolding rápido de una skill nueva, o mencione documentación de una herramienta/API que quiere que Claude sepa usar de forma repetible. También cúbrela cuando el usuario pida "validar esta skill" o "empaquetar esta skill en un .skill".
+description: Genera automáticamente el Agente Skills completas (SKILL.md + referencias + scripts) a partir de documentación técnica, investigando esa documentación directamente con las herramientas propias de el Agente (búsqueda y lectura web) — sin agentes externos ni configuración de API keys. Usa esta skill siempre que el usuario pida "crear una skill a partir de esta documentación", "convertir esta API en una skill", "generar una skill para [servicio]", quiera scaffolding rápido de una skill nueva, o mencione documentación de una herramienta/API que quiere que el Agente sepa usar de forma repetible. También cúbrela cuando el usuario pida "validar esta skill" o "empaquetar esta skill en un .skill".
 ---
 
 # Generador de Skills
 
 ## Qué hace
 
-Apunta esta skill a cualquier documentación (una URL, varias páginas, o texto de documentación ya pegado en el chat) y obtén una Claude Skill funcional: un `SKILL.md` con frontmatter correcto, una carpeta `referencias/` con los patrones extraídos, y opcionalmente scripts de apoyo. La investigación de la documentación la hace Claude mismo con sus herramientas de búsqueda y lectura web — no requiere ningún servicio externo, API key, ni servidor MCP. El resultado es un punto de partida sólido, no un producto terminado — siempre debe revisarse con criterio antes de usarse en producción.
+Apunta esta skill a cualquier documentación (una URL, varias páginas, o texto de documentación ya pegado en el chat) y obtén una el Agente Skill funcional: un `SKILL.md` con frontmatter correcto, una carpeta `referencias/` con los patrones extraídos, y opcionalmente scripts de apoyo. La investigación de la documentación la hace el Agente mismo con sus herramientas de búsqueda y lectura web — no requiere ningún servicio externo, API key, ni servidor MCP. El resultado es un punto de partida sólido, no un producto terminado — siempre debe revisarse con criterio antes de usarse en producción.
 
 ## Requisitos previos
 
-Ninguno. Esta skill usa únicamente las herramientas con las que Claude ya cuenta (búsqueda web y lectura de páginas). No hace falta registrarse en ningún servicio, generar una API key, ni instalar un servidor MCP.
+Ninguno. Esta skill usa únicamente las herramientas con las que el Agente ya cuenta (búsqueda web y lectura de páginas). No hace falta registrarse en ningún servicio, generar una API key, ni instalar un servidor MCP.
 
 Si el usuario ya tiene documentación pegada en el chat o adjunta como archivo, úsala directamente y salta la investigación web — no busques en internet lo que ya te dieron.
 
@@ -78,7 +78,7 @@ Si una página relevante no es accesible (requiere login, está detrás de un pa
 
 ## Referencias
 
-- `referencias/plantilla-prompt-extraccion.md` — checklist completo de qué información no debe faltar al investigar la documentación (identidad de la skill, workflows, endpoints, autenticación, ejemplos, gotchas), pensado para que Claude lo siga por sí mismo mientras usa `web_search`/`web_fetch`.
+- `referencias/plantilla-prompt-extraccion.md` — checklist completo de qué información no debe faltar al investigar la documentación (identidad de la skill, workflows, endpoints, autenticación, ejemplos, gotchas), pensado para que el Agente lo siga por sí mismo mientras usa `web_search`/`web_fetch`.
 - `referencias/esquema-extraccion.json` — esquema JSON opcional para organizar la información recolectada antes de escribir el `SKILL.md`; también sirve como checklist de qué campos no deben faltar.
 - `referencias/patrones-de-salida.md` — cómo estructurar la salida de una skill (plantillas estrictas vs. flexibles, patrón de ejemplos).
 - `referencias/patrones-de-flujo.md` — cómo describir flujos de trabajo secuenciales y condicionales dentro de un `SKILL.md`.
@@ -91,4 +91,4 @@ Si una página relevante no es accesible (requiere login, está detrás de un pa
 
 ## Créditos
 
-Basado en el proyecto `skill-gen` de Railly Hugo para Crafter Station. La versión original delegaba la extracción de contenido a un agente externo (Firecrawl) vía servidor MCP; esta versión reemplaza ese paso por investigación directa con las herramientas nativas de Claude (`web_search`/`web_fetch`), eliminando la necesidad de API keys o configuración de MCP. El resto del flujo (scaffolding, validación, empaquetado) se mantiene igual. Distribuido bajo licencia Apache 2.0 (ver `LICENSE.txt`).
+Basado en el proyecto `skill-gen` de Railly Hugo para Crafter Station. La versión original delegaba la extracción de contenido a un agente externo (Firecrawl) vía servidor MCP; esta versión reemplaza ese paso por investigación directa con las herramientas nativas de el Agente (`web_search`/`web_fetch`), eliminando la necesidad de API keys o configuración de MCP. El resto del flujo (scaffolding, validación, empaquetado) se mantiene igual. Distribuido bajo licencia Apache 2.0 (ver `LICENSE.txt`).

@@ -74,20 +74,20 @@ Código ejecutable (Python/Bash/etc.) que puede ejecutarse directamente para rea
 
 **Apropiado para:** scripts de Python, shell, o cualquier código ejecutable que realice automatización, procesamiento de datos u operaciones específicas.
 
-**Nota:** los scripts pueden ejecutarse sin cargarse al contexto, pero también pueden ser leídos por Claude para parchearlos o ajustar el entorno.
+**Nota:** los scripts pueden ejecutarse sin cargarse al contexto, pero también pueden ser leídos por el Agente para parchearlos o ajustar el entorno.
 
 ### referencias/
-Documentación y material de referencia pensado para cargarse al contexto e informar el proceso y razonamiento de Claude.
+Documentación y material de referencia pensado para cargarse al contexto e informar el proceso y razonamiento de el Agente.
 
 **Ejemplos de otras skills:**
 - Gestión de producto: `communication.md`, `context_building.md` - guías detalladas de flujo de trabajo
 - BigQuery: documentación de referencia de API y ejemplos de consultas
 - Finanzas: documentación de esquemas, políticas de la empresa
 
-**Apropiado para:** documentación extensa, referencias de API, esquemas de bases de datos, guías completas, o cualquier información detallada que Claude deba consultar mientras trabaja.
+**Apropiado para:** documentación extensa, referencias de API, esquemas de bases de datos, guías completas, o cualquier información detallada que el Agente deba consultar mientras trabaja.
 
 ### assets/
-Archivos que no están pensados para cargarse al contexto, sino para usarse dentro de la salida que produce Claude.
+Archivos que no están pensados para cargarse al contexto, sino para usarse dentro de la salida que produce el Agente.
 
 **Ejemplos de otras skills:**
 - Estilo de marca: archivos de plantilla de PowerPoint (.pptx), archivos de logo
@@ -164,7 +164,7 @@ Este placeholder representa dónde se almacenarían los archivos de recursos (as
 Reemplázalo con archivos de recursos reales (plantillas, imágenes, fuentes, etc.) o elimínalo si no se necesita.
 
 Los archivos de assets NO están pensados para cargarse al contexto, sino para usarse
-dentro de la salida que produce Claude.
+dentro de la salida que produce el Agente.
 
 Ejemplos de archivos de assets de otras skills:
 - Lineamientos de marca: logo.png, slides_template.pptx

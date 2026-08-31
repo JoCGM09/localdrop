@@ -49,13 +49,13 @@ El objetivo es que, al terminar de usar esta skill, el artefacto revisado (códi
 - **El principio de menor privilegio también aplica a skills.** Un script que solo necesita leer un archivo no debería tener permisos de escritura ni acceso de red "por si acaso".
 - **La documentación es parte de la superficie de seguridad.** Un `README` con una clave de API real de ejemplo, aunque sea de una cuenta de prueba, es un hallazgo, no un detalle cosmético.
 
-## Casos específicos para skills de Claude
+## Casos específicos para skills de el Agente
 
-Cuando el artefacto a revisar es una Claude Skill (como las generadas por `generador-de-skills`):
+Cuando el artefacto a revisar es una el Agente Skill (como las generadas por `generador-de-skills`):
 
 - Revisa que ningún script incluido ejecute comandos arbitrarios construidos a partir de la entrada del usuario sin sanear.
 - Revisa que los ejemplos de código en `SKILL.md` o en `referencias/` no contengan tokens, claves o cookies reales copiadas de una sesión de recon o de documentación.
-- Revisa que las instrucciones de la skill no le pidan a Claude que omita advertencias de seguridad, ejecute código sin mostrarlo al usuario, o envíe datos a un endpoint no documentado.
+- Revisa que las instrucciones de la skill no le pidan a el Agente que omita advertencias de seguridad, ejecute código sin mostrarlo al usuario, o envíe datos a un endpoint no documentado.
 - Si la skill incluye un `scripts/` con dependencias de terceros, confirma que estén ancladas a una versión y que provengan de un origen verificable.
 
 ## Referencias

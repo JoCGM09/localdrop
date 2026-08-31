@@ -49,7 +49,7 @@ Estructura:
 ## 1. Personaliza antes de usar
 
 - Edita `AGENTS.md`: completa la secciones "Reglas del proyecto" y "Convenciones técnicas" con tu stack real (lenguaje, cómo correr tests, cómo lintear, etc.).
-- Revisa `opencode.json`: cambia los strings de modelo (`anthropic/claude-sonnet-4-5`, `anthropic/claude-haiku-4-5`) por los que tengas disponibles/prefieras. La idea del split no cambia: **modelo capaz para decisiones, modelo barato para trabajo mecánico y repetitivo.**
+- Revisa `opencode.json`: cambia los strings de modelo (`anthropic/el Agente-sonnet-4-5`, `anthropic/el Agente-haiku-4-5`) por los que tengas disponibles/prefieras. La idea del split no cambia: **modelo capaz para decisiones, modelo barato para trabajo mecánico y repetitivo.**
 - Si usas otro proveedor (OpenAI, Google, etc.), el formato de model string cambia (`openai/gpt-...`) — revisa `opencode models` en tu CLI.
 
 ## 2. El flujo completo, paso a paso

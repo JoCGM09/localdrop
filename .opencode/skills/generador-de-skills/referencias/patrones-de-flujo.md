@@ -2,7 +2,7 @@
 
 ## Flujos secuenciales
 
-Para tareas complejas, divide las operaciones en pasos claros y secuenciales. Suele ayudar dar a Claude un panorama del proceso cerca del inicio del `SKILL.md`:
+Para tareas complejas, divide las operaciones en pasos claros y secuenciales. Suele ayudar dar a el Agente un panorama del proceso cerca del inicio del `SKILL.md`:
 
 ```markdown
 Rellenar un formulario PDF implica estos pasos:
@@ -16,7 +16,7 @@ Rellenar un formulario PDF implica estos pasos:
 
 ## Flujos condicionales
 
-Para tareas con lógica ramificada, guía a Claude a través de los puntos de decisión:
+Para tareas con lógica ramificada, guía a el Agente a través de los puntos de decisión:
 
 ```markdown
 1. Determina el tipo de modificación:
