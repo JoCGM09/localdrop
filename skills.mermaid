@@ -1,47 +1,48 @@
-graph TD
-    subgraph Skills
-        A[cost-guard]
-        B[definicion-de-marca]
-        C[generador-de-skills]
-        D[seguridad-buenas-practicas]
-        E[test-strategy]
+graph LR
+    %% Definición de Estilos
+    classDef skill fill:#f96,stroke:#333,stroke-width:2px;
+    classDef agent fill:#dfd,stroke:#333,stroke-width:2px;
+    classDef goal fill:#bbf,stroke:#333,stroke-width:1px;
+
+    %% Agentes Principales
+    subgraph Agents [Agentes Especializados]
+        SW[spec-writer]
+        BLD[build]
+        TW[test-writer]
+        SR[security-reviewer]
     end
 
-    subgraph Agents
-        F[spec-writer]
-        G[build]
-        H[test-writer]
-        I[security-reviewer]
+    %% Skills y su Aplicación
+    subgraph Skills [Skills de Soporte]
+        CG((cost-guard))
+        DM((definicion-de-marca))
+        GS((generador-de-skills))
+        SBP((seguridad-buenas-practicas))
+        TS((test-strategy))
     end
 
-    subgraph "Development Process & Artifacts"
-        J(Constitución) --> K["specs/mission.md, specs/tech-stack.md, specs/roadmap.md"]
-        L(Nueva Feature) --> M["specs/YYYY-MM-DD-feature/..."]
-        N(Implementación) --> O[Código Fuente]
-        P(Testing) --> Q[Reporte de Tests]
-        R(Revisión de Seguridad) --> S[Reporte de Seguridad]
-    end
+    %% Relaciones de Influencia
+    CG -- "Optimiza tokens en" --> SW
+    CG -- "Optimiza tokens en" --> BLD
+    CG -- "Optimiza tokens en" --> TW
+    CG -- "Optimiza tokens en" --> SR
 
-    A -- "Guía CUALQUIER tarea" --> F
-    A -- "Guía CUALQUIER tarea" --> G
-    A -- "Guía CUALQUIER tarea" --> H
-    A -- "Guía CUALQUIER tarea" --> I
+    DM -- "Diseño visual para" --> SW
     
-    B -- "Usada en /feature" --> F
-    F -- "Define" --> J
-    F -- "Define" --> L
-
-    C -- "Genera otras skills" --> C
-
-    D -- "Usada en revisión" --> I
-    I -- "Revisa" --> O
-    I -- "Produce" --> S
-
-    E -- "Guía para escribir tests" --> H
-    H -- "Escribe/corre" --> P
+    TS -- "Estrategia para" --> TW
     
-    G -- "Implementa" --> N
+    SBP -- "Checklist para" --> SR
+    SBP -- "Valida" --> GS
 
-    subgraph "Flujo de Proceso"
-        J --> L --> N --> P --> R
-    end
+    GS -- "Crea nuevas" --> Skills
+
+    %% Flujo de Valor
+    SW -- "Genera Specs" --> BLD
+    BLD -- "Genera Código" --> TW
+    TW -- "Genera Confianza" --> SR
+    SR -- "Genera Seguridad" --> Final[Producto Final]
+
+    %% Asignación de Clases
+    class SW,BLD,TW,SR agent;
+    class CG,DM,GS,SBP,TS skill;
+    class Final goal;

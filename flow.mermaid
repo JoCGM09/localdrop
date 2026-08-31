@@ -1,57 +1,70 @@
 graph TD
-    A[Start] --> B{Paso 1: Constitución};
-    B --> C["/constitution con spec-writer"];
-    C --> D{Genera specs iniciales};
-    D --> E[specs/mission.md];
-    D --> F[specs/tech-stack.md];
-    D --> G[specs/roadmap.md];
-    
-    H{Paso 2: Nueva Feature} --> I["/feature con spec-writer"];
-    I --> J{Genera specs de feature};
-    J --> K["specs/YYYY-MM-DD-feature/requirements.md"];
-    J --> L["specs/YYYY-MM-DD-feature/plan.md"];
-    J --> M["specs/YYYY-MM-DD-feature/validation.md"];
+    %% Definición de Estilos
+    classDef process fill:#f9f,stroke:#333,stroke-width:2px;
+    classDef artifact fill:#bbf,stroke:#333,stroke-width:1px;
+    classDef agent fill:#dfd,stroke:#333,stroke-width:2px;
+    classDef decision fill:#fff4dd,stroke:#d4a017,stroke-width:2px;
 
-    N{Paso 3: Implementar} --> O["/implement con build"];
-    O --> P{Escribe código según plan.md};
-    P --> Q{Repetir hasta completar plan.md};
-    
-    R{Paso 4: Testing} --> S["/test con test-writer"];
-    S --> T{Escribe y corre tests};
-    T --> U[Resultados de tests];
-    
-    V{Paso 5: Seguridad} --> W["/security-review con security-reviewer"];
-    W --> X{Revisa contra checklist de seguridad};
-    X --> Y[Reporte de seguridad];
-
-    Z{Paso 6: Merge} --> AA{Checklist en validation.md};
-    AA --> BB[Tests OK?];
-    AA --> CC[Seguridad OK?];
-    AA --> DD[plan.md completo?];
-    
-    subgraph Workflow
-        direction LR
-        A -- Completado --> H;
-        G -- Guía --> H;
-        M -- Guía --> N;
-        Q -- Completo --> R;
-        U -- OK --> V;
-        Y -- OK --> Z;
+    %% Fase 1: Constitución
+    subgraph Fase_1 [Fase 1: Constitución del Proyecto]
+        A[Inicio del Proyecto] --> B["Comando: /constitution"];
+        B --> C{{"Agente: spec-writer"}};
+        C --> D["Crear specs/mission.md (Propósito)"];
+        C --> E["Crear specs/tech-stack.md (Tecnologías)"];
+        C --> F["Crear specs/roadmap.md (Fases)"];
     end
 
-    subgraph Artifacts
-        direction TB
-        E; F; G; K; L; M; U; Y;
+    %% Fase 2: Definición de Feature
+    subgraph Fase_2 [Fase 2: Definición de Feature]
+        G[Nueva Idea/Requerimiento] --> H["Comando: /feature"];
+        H --> I{{"Agente: spec-writer"}};
+        I --> J["Crear specs/FECHA-feature/requirements.md"];
+        I --> K["Crear specs/FECHA-feature/plan.md (Pasos técnicos)"];
+        I --> L["Crear specs/FECHA-feature/validation.md (Criterios de éxito)"];
+        K --> K1{"¿Plan aprobado por Usuario?"};
+        K1 -- No --> I;
     end
 
-    subgraph "Agents & Commands"
-        direction TB
-        C; I; O; S; W;
+    %% Fase 3: Implementación
+    subgraph Fase_3 [Fase 3: Implementación]
+        K1 -- Sí --> M["Comando: /implement"];
+        M --> N{{"Agente: build"}};
+        N --> O["Crear rama: feat/nombre-feature"];
+        O --> P["Escribir código siguiendo plan.md"];
+        P --> Q["Autocorrección (Linter/Errores)"];
     end
-    
-    DD -- Sí --> EE[Merge a main];
-    BB -- Sí --> V;
-    CC -- Sí --> Z;
-    
-    BB -- No --> N;
-    CC -- No --> N;
+
+    %% Fase 4: Verificación
+    subgraph Fase_4 [Fase 4: Verificación y Seguridad]
+        Q --> R["Comando: /test"];
+        R --> S{{"Agente: test-writer"}};
+        S --> T["Generar y ejecutar tests unitarios/e2e"];
+        T --> U{{"Resultados de Tests"}};
+        
+        U -- Fallo --> P;
+        
+        U -- Éxito --> V["Comando: /security-review"];
+        V --> W{{"Agente: security-reviewer"}};
+        W --> X["Auditar vulnerabilidades y secretos"];
+        X --> Y{{"Reporte de Seguridad"}};
+        
+        Y -- Hallazgos Críticos --> P;
+    end
+
+    %% Fase 5: Entrega
+    subgraph Fase_5 [Fase 5: Entrega y Cierre]
+        Y -- Limpio --> Z["Verificar validation.md"];
+        Z --> AA["Comando: /merge"];
+        AA --> BB["Merge a main y Borrar rama"];
+        BB --> CC[Feature Completada];
+    end
+
+    %% Relaciones Globales
+    F -- "Alimenta" --> G;
+    CC -- "Siguiente paso en Roadmap" --> G;
+
+    %% Asignación de Clases
+    class C,I,N,S,W agent;
+    class D,E,F,J,K,L,U,Y artifact;
+    class K1,U,Y decision;
+    class B,H,M,R,V,AA process;
