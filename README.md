@@ -94,6 +94,12 @@ El subagente `security-reviewer` (solo lectura, no puede editar ni correr comand
 ### Paso 6 — Merge
 Checklist en `validation.md` de la feature: tests OK, seguridad OK, plan.md completo → merge normal con tu flujo de git de siempre.
 
+IMPORTANTE: Si necesitas limpiar la ventana de contexto (recomendado para casos mayores al 15%), cierra la sesión y al abrir una nueva ingresa el siguiente prompt:
+
+'''
+Lee la constitución en @docs/specs para recordar nuestras reglas de arquitectura. Luego, abre el archivo @specs/2026-08-31-perfiles-y-gestion/plan.md. Revisa cuáles tareas ya están marcadas como completadas, identifica el siguiente grupo de tareas pendiente y ejecútalo siguiendo exactamente las instrucciones de tu System Prompt. Usa tu herramienta AskUserQuestion si tienes dudas antes de escribir código.
+'''
+
 ## 3. Qué NO automatizar con IA
 
 - Decisiones de cumplimiento normativo de datos — la IA puede *sugerir*, pero la validación final es humana/legal.
