@@ -1,6 +1,6 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "model": "anthropic/claude-sonnet-4-5",
+  "model": "google/gemini-3-1-pro-preview",
 
   "instructions": [
     "AGENTS.md",
@@ -28,27 +28,29 @@
 
   "agent": {
     "plan": {
-      "model": "anthropic/claude-haiku-4-5"
+      "model": "google/gemini-3-flash-preview"
     },
     "build": {
-      "model": "anthropic/claude-sonnet-4-5",
+      "model": "google/gemini-3-1-pro-preview",
       "permission": {
         "edit": "allow",
         "bash": { "*": "ask", "git *": "allow", "npm *": "allow" }
       }
     },
 
+
+
     "spec-writer": {
       "mode": "subagent",
       "description": "Redacta constitution y specs de feature; NUNCA implementa código.",
-      "model": "anthropic/claude-sonnet-4-5",
+      "model": "google/gemini-3-1-pro-preview",
       "tools": { "write": true, "edit": true, "bash": false, "webfetch": false }
     },
 
     "test-writer": {
       "mode": "subagent",
       "description": "Escribe y corre tests a partir de requirements.md/validation.md.",
-      "model": "anthropic/claude-haiku-4-5",
+      "model": "google/gemini-3-flash-preview",
       "tools": { "write": true, "edit": true, "bash": true, "webfetch": false },
       "permission": {
         "edit": "allow",
@@ -59,14 +61,14 @@
     "security-reviewer": {
       "mode": "subagent",
       "description": "Revisión de seguridad de solo lectura (OWASP, secrets, authZ/authN).",
-      "model": "anthropic/claude-sonnet-4-5",
+      "model": "google/gemini-3-1-pro-preview",
       "tools": { "write": false, "edit": false, "bash": false, "webfetch": false }
     },
 
     "code-reviewer": {
       "mode": "subagent",
       "description": "Revisión de calidad de código de solo lectura, sin editar.",
-      "model": "anthropic/claude-haiku-4-5",
+      "model": "google/gemini-3-flash-preview",
       "tools": { "write": false, "edit": false, "bash": false, "webfetch": false }
     }
   }
