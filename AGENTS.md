@@ -7,7 +7,7 @@ Todo lo que pongas aquí no hace falta repetirlo en cada prompt: es la forma má
 ## Flujo de trabajo obligatorio (SDD)
 
 1. No se escribe código sin un `plan.md` aprobado en `specs/<fecha>-<feature>/`.
-2. Toda feature nueva empieza en una rama nueva desde `main`.
+2. Toda feature nueva empieza en una rama nueva desde `master`.
 3. Antes de mergear: `test-writer` corrió y los tests pasan, `security-reviewer` no dejó hallazgos "high/critical" sin resolver.
 4. Si el agente no está seguro de un requisito, pregunta — no asume.
 
