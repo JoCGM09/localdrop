@@ -7,6 +7,9 @@
 /dist
 /out
 /target
+.next/
+.cache/
+.turbo/
 
 # Logs
 logs
@@ -68,9 +71,9 @@ typings/
 
 # dotenv environment variables file
 .env
-.env.test
-.env.production
-.env.local
+.env.*
+!.env.example
+!.env.template
 
 # parcel-bundler cache files
 .cache

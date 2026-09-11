@@ -1,6 +1,6 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "model": "google/gemini-3-1-pro-preview",
+  "model": "google/gemini-3.1-pro-preview",
 
   "instructions": [
     "AGENTS.md",
@@ -31,7 +31,7 @@
       "model": "google/gemini-3-flash-preview"
     },
     "build": {
-      "model": "google/gemini-3-1-pro-preview",
+      "model": "google/gemini-3.1-pro-preview",
       "permission": {
         "edit": "allow",
         "bash": { "*": "ask", "git *": "allow", "npm *": "allow" }
@@ -43,7 +43,7 @@
     "spec-writer": {
       "mode": "subagent",
       "description": "Redacta constitution y specs de feature; NUNCA implementa código.",
-      "model": "google/gemini-3-1-pro-preview",
+      "model": "google/gemini-3.1-pro-preview",
       "tools": { "write": true, "edit": true, "bash": false, "webfetch": false }
     },
 
@@ -61,7 +61,7 @@
     "security-reviewer": {
       "mode": "subagent",
       "description": "Revisión de seguridad de solo lectura (OWASP, secrets, authZ/authN).",
-      "model": "google/gemini-3-1-pro-preview",
+      "model": "google/gemini-3.1-pro-preview",
       "tools": { "write": false, "edit": false, "bash": false, "webfetch": false }
     },
 
