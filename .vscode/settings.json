@@ -1,0 +1,9 @@
+{
+  "files.exclude": {
+    "CLAUDE.md": true,
+    ".cursorrules": true,
+    ".windsurfrules": true,
+    "CONVENTIONS.md": true,
+    ".opencode/node_modules": true
+  }
+}
