@@ -425,24 +425,6 @@ import Layout from '../layouts/Layout.astro';
 
 	const handleFileSelection = (file: File) => {
 		if (file.size > MAX_FILE_SIZE) {
-			window.showToast(`La imagen es muy grande (${formatBytes(file.size)}). El máximo es 50MB.`, 'error');
-			return;
-		}
-		
-		// Liberar URL previa si existiera
-		if (selectedImageBlobUrl) {
-			URL.revokeObjectURL(selectedImageBlobUrl);
-		}
-
-		selectedImageFile = file;
-		selectedImageBlobUrl = URL.createObjectURL(file);
-		
-		if (imagePreviewElement) imagePreviewElement.src = selectedImageBlobUrl;
-		
-		imageDropzone?.classList.replace('flex', 'hidden');
-		imagePreviewContainer?.classList.replace('hidden', 'flex');
-	const handleFileSelection = (file: File) => {
-		if (file.size > MAX_FILE_SIZE) {
 			window.showToast(`El archivo es muy grande (${formatBytes(file.size)}). El máximo es 50MB.`, 'error');
 			return;
 		}

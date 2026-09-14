@@ -305,6 +305,111 @@ func TestWebSocketFlow(t *testing.T) {
 	}
 }
 
+func TestWebSocketBinaryFlow(t *testing.T) {
+	store := NewStore()
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		handleConnections(w, r, store)
+	}))
+	defer server.Close()
+
+	wsURL := "ws" + strings.TrimPrefix(server.URL, "http") + "/ws"
+
+	// Client A (Sender)
+	dialer := websocket.Dialer{}
+	connA, _, err := dialer.Dial(wsURL, nil)
+	if err != nil {
+		t.Fatalf("Failed to connect A: %v", err)
+	}
+	defer connA.Close()
+
+	// Client B (Receiver)
+	connB, _, err := dialer.Dial(wsURL, nil)
+	if err != nil {
+		t.Fatalf("Failed to connect B: %v", err)
+	}
+	defer connB.Close()
+
+	// A sends intent to send image
+	err = connA.WriteJSON(WSMessage{
+		Action:   "send_image",
+		FileName: "test-image.png",
+	})
+	if err != nil {
+		t.Fatalf("A failed to send intent: %v", err)
+	}
+
+	// A receives ready_for_binary
+	var msgA WSMessage
+	err = connA.ReadJSON(&msgA)
+	if err != nil {
+		t.Fatalf("A failed to receive ready_for_binary: %v", err)
+	}
+	if msgA.Action != "ready_for_binary" {
+		t.Fatalf("Expected ready_for_binary, got: %+v", msgA)
+	}
+
+	// A sends binary data
+	binaryData := []byte{0x89, 'P', 'N', 'G', 0x0D, 0x0A, 0x1A, 0x0A} // PNG header
+	err = connA.WriteMessage(websocket.BinaryMessage, binaryData)
+	if err != nil {
+		t.Fatalf("A failed to send binary data: %v", err)
+	}
+
+	// A receives PIN
+	err = connA.ReadJSON(&msgA)
+	if err != nil {
+		t.Fatalf("A failed to receive PIN: %v", err)
+	}
+	if msgA.Action != "pin_generated" {
+		t.Fatalf("Expected pin_generated, got: %+v", msgA)
+	}
+	pin := msgA.PIN
+
+	// B sends PIN
+	err = connB.WriteJSON(WSMessage{
+		Action: "receive_text",
+		PIN:    pin,
+	})
+	if err != nil {
+		t.Fatalf("B failed to send PIN: %v", err)
+	}
+
+	// B receives file_received
+	var msgB WSMessage
+	err = connB.ReadJSON(&msgB)
+	if err != nil {
+		t.Fatalf("B failed to receive file_received: %v", err)
+	}
+	if msgB.Action != "file_received" || msgB.FileName != "test-image.png" {
+		t.Fatalf("Unexpected msg from B: %+v", msgB)
+	}
+
+	// B receives binary data
+	msgType, p, err := connB.ReadMessage()
+	if err != nil {
+		t.Fatalf("B failed to receive binary data: %v", err)
+	}
+	if msgType != websocket.BinaryMessage {
+		t.Fatalf("Expected BinaryMessage, got %d", msgType)
+	}
+	if string(p) != string(binaryData) {
+		t.Errorf("Expected binary data %v, got %v", binaryData, p)
+	}
+
+	// A receives transfer_complete
+	err = connA.SetReadDeadline(time.Now().Add(2 * time.Second))
+	if err != nil {
+		t.Fatalf("Failed to set deadline: %v", err)
+	}
+	err = connA.ReadJSON(&msgA)
+	if err != nil {
+		t.Fatalf("A failed to receive transfer_complete: %v", err)
+	}
+	if msgA.Action != "transfer_complete" {
+		t.Fatalf("Expected transfer_complete, got: %+v", msgA)
+	}
+}
+
 func TestMaxPayloadSize(t *testing.T) {
 	store := NewStore()
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

@@ -12,7 +12,10 @@
 - [x] **Fase 3: Transferencia de archivos pequeños**
   - Soporte genérico para documentos (ej. .pdf, .docx).
   - Aplicación de límite estricto de tamaño de archivo (ej. 50MB) desde cliente y servidor.
-- [ ] **Fase 4: Pulido final y manejo de fallos**
+- [x] **Fase 4: Pulido final y manejo de fallos**
   - Refinamiento de la interfaz (UI/UX) utilizando componentes de shadcn.
   - Manejo integral de errores (código inválido, expiración de PIN/timeout, archivo pesado).
   - Empaquetado final y documentación para ejecución fácil.
+- [ ] **Fase 5: Soporte nativo para portapapeles de imágenes**
+  - Nueva opción visual (Tab) o integración directa para pegar imágenes desde el portapapeles (`Ctrl+V`).
+  - Previsualización gráfica de la imagen antes de enviar y al recibir.
