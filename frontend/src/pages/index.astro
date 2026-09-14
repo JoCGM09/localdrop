@@ -742,7 +742,18 @@ import Layout from '../layouts/Layout.astro';
 		recWs.onmessage = (event) => {
 			// Manejar recepción de Binarios (Archivos/Imágenes)
 			if (event.data instanceof Blob) {
-				incomingFileBlobUrl = URL.createObjectURL(event.data);
+				let mimeType = 'application/octet-stream';
+				if (incomingFileIsImage) {
+					const lower = incomingFileName.toLowerCase();
+					if (lower.endsWith('.png')) mimeType = 'image/png';
+					else if (lower.endsWith('.jpg') || lower.endsWith('.jpeg')) mimeType = 'image/jpeg';
+					else if (lower.endsWith('.webp')) mimeType = 'image/webp';
+					else if (lower.endsWith('.gif')) mimeType = 'image/gif';
+					else mimeType = 'image/png';
+				}
+				
+				const typedBlob = new Blob([event.data], { type: mimeType });
+				incomingFileBlobUrl = URL.createObjectURL(typedBlob);
 				
 				if (incomingFileIsImage) {
 					if (receivedImageElement) receivedImageElement.src = incomingFileBlobUrl;
@@ -817,23 +828,48 @@ import Layout from '../layouts/Layout.astro';
 	btnDownloadFile?.addEventListener('click', () => triggerDownload(incomingFileBlobUrl, incomingFileName));
 	btnDownloadImage?.addEventListener('click', () => triggerDownload(incomingFileBlobUrl, incomingFileName));
 
+	const getPngBlobFromUrl = (url: string): Promise<Blob> => {
+		return new Promise((resolve, reject) => {
+			const img = new Image();
+			img.crossOrigin = 'anonymous';
+			img.onload = () => {
+				const canvas = document.createElement('canvas');
+				canvas.width = img.naturalWidth || img.width;
+				canvas.height = img.naturalHeight || img.height;
+				const ctx = canvas.getContext('2d');
+				if (!ctx) {
+					reject(new Error('No canvas context'));
+					return;
+				}
+				ctx.drawImage(img, 0, 0);
+				canvas.toBlob((blob) => {
+					if (blob) resolve(blob);
+					else reject(new Error('Canvas toBlob failed'));
+				}, 'image/png');
+			};
+			img.onerror = (err) => reject(err);
+			img.src = url;
+		});
+	};
+
 	btnCopyImage?.addEventListener('click', async () => {
 		try {
 			if (!incomingFileBlobUrl) return;
-			// Obtener el blob real desde la URL para el ClipboardItem
-			const response = await fetch(incomingFileBlobUrl);
-			const blob = await response.blob();
+			
+			// Convertir la imagen a un Blob estandarizado de tipo 'image/png' usando un Canvas
+			// Esto es REQUISITO OBLIGATORIO en navegadores móviles (Chrome/Safari) para copiar imágenes reales al portapapeles
+			const pngBlob = await getPngBlobFromUrl(incomingFileBlobUrl);
 			
 			await navigator.clipboard.write([
 				new ClipboardItem({
-					[blob.type]: blob
+					'image/png': pngBlob
 				})
 			]);
 			
 			window.showToast('¡Imagen copiada al portapapeles!');
 		} catch (err) {
 			console.error('Error al copiar imagen: ', err);
-			window.showToast('Error al copiar imagen (El navegador puede no soportarlo)', 'error');
+			window.showToast('Error al copiar imagen (Tu navegador/SO puede no soportarlo)', 'error');
 		}
 	});
 
