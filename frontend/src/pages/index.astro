@@ -373,7 +373,45 @@ import Layout from '../layouts/Layout.astro';
 		return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
 	};
 
+	const handleImageSelection = (file: File) => {
+		if (file.size > MAX_FILE_SIZE) {
+			window.showToast(`La imagen es muy grande (${formatBytes(file.size)}). El máximo es 50MB.`, 'error');
+			return;
+		}
+		
+		// Liberar URL previa si existiera
+		if (selectedImageBlobUrl) {
+			URL.revokeObjectURL(selectedImageBlobUrl);
+		}
+
+		selectedImageFile = file;
+		selectedImageBlobUrl = URL.createObjectURL(file);
+		
+		if (imagePreviewElement) imagePreviewElement.src = selectedImageBlobUrl;
+		
+		imageDropzone?.classList.replace('flex', 'hidden');
+		imagePreviewContainer?.classList.replace('hidden', 'flex');
+	};
+
 	const handleFileSelection = (file: File) => {
+		if (file.size > MAX_FILE_SIZE) {
+			window.showToast(`La imagen es muy grande (${formatBytes(file.size)}). El máximo es 50MB.`, 'error');
+			return;
+		}
+		
+		// Liberar URL previa si existiera
+		if (selectedImageBlobUrl) {
+			URL.revokeObjectURL(selectedImageBlobUrl);
+		}
+
+		selectedImageFile = file;
+		selectedImageBlobUrl = URL.createObjectURL(file);
+		
+		if (imagePreviewElement) imagePreviewElement.src = selectedImageBlobUrl;
+		
+		imageDropzone?.classList.replace('flex', 'hidden');
+		imagePreviewContainer?.classList.replace('hidden', 'flex');
+	};
 		if (file.size > MAX_FILE_SIZE) {
 			window.showToast(`El archivo es muy grande (${formatBytes(file.size)}). El máximo es 50MB.`, 'error');
 			return;
@@ -445,11 +483,27 @@ import Layout from '../layouts/Layout.astro';
 
 	// Paste support anywhere in the window
 	window.addEventListener('paste', (e: ClipboardEvent) => {
-		// Only capture paste if we are in Send mode and the initial form is visible
-		if (currentSendMode !== 'file' || !stateInitial?.classList.contains('block')) return;
+		// Solo capturar si el form inicial está visible
+		if (!stateInitial?.classList.contains('block') || !e.clipboardData) return;
 		
-		if (e.clipboardData && e.clipboardData.files && e.clipboardData.files.length > 0) {
-			handleFileSelection(e.clipboardData.files[0]);
+		const items = e.clipboardData.items;
+		
+		// Manejar pegado en modo Imagen
+		if (currentSendMode === 'image') {
+			for (let i = 0; i < items.length; i++) {
+				if (items[i].type.indexOf('image') !== -1) {
+					const file = items[i].getAsFile();
+					if (file) handleImageSelection(file);
+					return; // Stop after first image
+				}
+			}
+			window.showToast('No se detectó ninguna imagen en el portapapeles', 'error');
+		} 
+		// Manejar pegado en modo Archivo (mantenemos retrocompatibilidad)
+		else if (currentSendMode === 'file') {
+			if (e.clipboardData.files && e.clipboardData.files.length > 0) {
+				handleFileSelection(e.clipboardData.files[0]);
+			}
 		}
 	});
 

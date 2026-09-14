@@ -8,7 +8,7 @@
    - Un contenedor oculto de *preview* (`<img>`) donde se renderizará la imagen pegada.
    - Un botón (ej. "X") para limpiar la imagen seleccionada.
 
-## Grupo 2: Lógica de Captura del Portapapeles
+## Grupo 2: Lógica de Captura del Portapapeles [HECHO]
 1. Modificar el *event listener* global de `paste` en JavaScript.
 2. Si el usuario está en el modo `image`, interceptar `e.clipboardData.items`.
 3. Filtrar los items para encontrar el primero de tipo `image/*`.
