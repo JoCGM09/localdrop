@@ -1,6 +1,10 @@
 package main
 
 import (
+	"net/http"
+	"net/http/httptest"
+	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -169,5 +173,168 @@ func TestStore_Expiration(t *testing.T) {
 	
 	if count != 0 {
 		t.Errorf("Expected pinsCount 0 after expiration, got %d", count)
+	}
+}
+
+func TestStore_Retrieve_Expired(t *testing.T) {
+	s := NewStore()
+	conn := &websocket.Conn{}
+	
+	s.mu.Lock()
+	pin := "9999"
+	s.items[pin] = ClipboardItem{
+		Sender:    conn,
+		ExpiresAt: time.Now().Add(-1 * time.Second), // Expired 1s ago
+	}
+	s.pinsCount[conn] = 1
+	s.mu.Unlock()
+
+	_, err := s.Retrieve(pin, &websocket.Conn{})
+	if err == nil {
+		t.Error("Expected error when retrieving expired PIN, but got nil")
+	}
+}
+
+func TestStore_ConcurrentRetrieve(t *testing.T) {
+	s := NewStore()
+	connSender := &websocket.Conn{}
+	pin, _ := s.Save(ClipboardItem{Text: "shared", Sender: connSender})
+
+	const numReceivers = 10
+	results := make(chan error, numReceivers)
+	var wg sync.WaitGroup
+
+	for i := 0; i < numReceivers; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			_, err := s.Retrieve(pin, &websocket.Conn{})
+			results <- err
+		}()
+	}
+
+	wg.Wait()
+	close(results)
+
+	successes := 0
+	for err := range results {
+		if err == nil {
+			successes++
+		}
+	}
+
+	if successes != 1 {
+		t.Errorf("Expected exactly 1 success, got %d", successes)
+	}
+}
+
+func TestWebSocketFlow(t *testing.T) {
+	store := NewStore()
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		handleConnections(w, r, store)
+	}))
+	defer server.Close()
+
+	wsURL := "ws" + strings.TrimPrefix(server.URL, "http") + "/ws"
+
+	// Client A (Sender)
+	dialer := websocket.Dialer{}
+	connA, _, err := dialer.Dial(wsURL, nil)
+	if err != nil {
+		t.Fatalf("Failed to connect A: %v", err)
+	}
+	defer connA.Close()
+
+	// Client B (Receiver)
+	connB, _, err := dialer.Dial(wsURL, nil)
+	if err != nil {
+		t.Fatalf("Failed to connect B: %v", err)
+	}
+	defer connB.Close()
+
+	// A sends text
+	err = connA.WriteJSON(WSMessage{
+		Action:  "send_text",
+		Payload: "integration test",
+	})
+	if err != nil {
+		t.Fatalf("A failed to send text: %v", err)
+	}
+
+	// A receives PIN
+	var msgA WSMessage
+	err = connA.ReadJSON(&msgA)
+	if err != nil {
+		t.Fatalf("A failed to receive PIN: %v", err)
+	}
+	if msgA.Action != "pin_generated" || len(msgA.PIN) != 4 {
+		t.Fatalf("Unexpected msg from A: %+v", msgA)
+	}
+	pin := msgA.PIN
+
+	// B sends PIN
+	err = connB.WriteJSON(WSMessage{
+		Action: "receive_text",
+		PIN:    pin,
+	})
+	if err != nil {
+		t.Fatalf("B failed to send PIN: %v", err)
+	}
+
+	// B receives text
+	var msgB WSMessage
+	err = connB.ReadJSON(&msgB)
+	if err != nil {
+		t.Fatalf("B failed to receive text: %v", err)
+	}
+	if msgB.Action != "text_received" || msgB.Payload != "integration test" {
+		t.Fatalf("Unexpected msg from B: %+v", msgB)
+	}
+
+	// A receives transfer_complete
+	err = connA.SetReadDeadline(time.Now().Add(2 * time.Second))
+	if err != nil {
+		t.Fatalf("Failed to set deadline: %v", err)
+	}
+	err = connA.ReadJSON(&msgA)
+	if err != nil {
+		t.Fatalf("A failed to receive transfer_complete: %v", err)
+	}
+	if msgA.Action != "transfer_complete" {
+		t.Fatalf("Expected transfer_complete, got: %+v", msgA)
+	}
+}
+
+func TestMaxPayloadSize(t *testing.T) {
+	store := NewStore()
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		handleConnections(w, r, store)
+	}))
+	defer server.Close()
+
+	wsURL := "ws" + strings.TrimPrefix(server.URL, "http") + "/ws"
+	dialer := websocket.Dialer{}
+	conn, _, err := dialer.Dial(wsURL, nil)
+	if err != nil {
+		t.Fatalf("Failed to connect: %v", err)
+	}
+	defer conn.Close()
+
+	// Create a payload larger than MaxPayloadSize
+	largePayload := strings.Repeat("a", MaxPayloadSize+100)
+	err = conn.WriteJSON(WSMessage{
+		Action:  "send_text",
+		Payload: largePayload,
+	})
+	
+	// We might get an error on write or on subsequent read because the server closes the connection
+	if err != nil {
+		return // OK
+	}
+
+	// Wait for connection to close
+	_, _, err = conn.ReadMessage()
+	if err == nil {
+		t.Error("Expected connection to close or error when sending payload exceeding MaxPayloadSize")
 	}
 }

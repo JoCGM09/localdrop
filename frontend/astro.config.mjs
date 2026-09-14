@@ -7,6 +7,7 @@ export default defineConfig({
   vite: {
     plugins: [tailwindcss()],
     server: {
+      allowedHosts: true, // Permite cualquier host (como ngrok) en modo desarrollo
       proxy: {
         '/ws': {
           target: 'ws://localhost:8080',
