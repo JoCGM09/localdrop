@@ -19,7 +19,7 @@
 2. Reutilizar el flujo implementado en la Fase 3 (Archivos). Enviar `{"action": "send_file", "filename": "clipboard-image.png"}` al servidor Go.
 3. Tras recibir el `ready_for_binary`, enviar el archivo de imagen cruda por el socket. *(Nota: El backend en Go no requiere cambios, ya que su lógica de metadatos generalizados maneja cualquier `Blob` binario perfectamente).*
 
-## Grupo 4: Lógica de Recepción y Visualización
+## Grupo 4: Lógica de Recepción y Visualización [HECHO]
 1. En el frontend (vista de recibir), modificar el evento de recepción de WebSocket.
 2. Crear un nuevo estado visual (`receive-state-image-success`) que renderice la imagen usando un `Blob URL`.
 3. Detectar, usando el `filename` recibido (o por inspección MIME del Blob), si el payload recibido es una imagen (termina en `.png`, `.jpg`, etc.) para renderizar el estado de Imagen en lugar del estado de Archivo genérico.

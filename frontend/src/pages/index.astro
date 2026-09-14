@@ -203,6 +203,36 @@ import Layout from '../layouts/Layout.astro';
 						<button id="btn-receive-another-file" class="flex-1 inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 border border-slate-200 bg-white hover:bg-slate-100 hover:text-slate-900 h-10 px-4 py-2">Volver</button>
 					</div>
 				</div>
+
+				<!-- Estado: Imagen Recibida -->
+				<div id="receive-state-image-success" class="hidden flex-col space-y-4">
+					<div class="flex items-center gap-2 text-success mb-2">
+						<svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+						<span class="font-medium">Imagen recibida exitosamente</span>
+					</div>
+					<div class="relative border border-slate-200 rounded-lg overflow-hidden bg-slate-50 flex items-center justify-center min-h-[200px] max-h-[300px]">
+						<img id="received-image-element" class="max-h-full max-w-full object-contain" src="" alt="Imagen recibida" />
+					</div>
+					<div class="flex flex-col gap-3 pt-2">
+						<div class="flex gap-3">
+							<button 
+								id="btn-copy-image"
+								class="flex-1 inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-white hover:bg-blue-900 h-10 px-4 py-2 gap-2"
+							>
+								<svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+								Copiar
+							</button>
+							<button 
+								id="btn-download-image"
+								class="flex-1 inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 border border-slate-200 bg-white hover:bg-slate-100 hover:text-slate-900 h-10 px-4 py-2 gap-2"
+							>
+								<svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+								Descargar
+							</button>
+						</div>
+						<button id="btn-receive-another-image" class="w-full inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 border border-slate-200 bg-white hover:bg-slate-100 hover:text-slate-900 h-10 px-4 py-2">Volver</button>
+					</div>
+				</div>
 			</div>
 		</div>
 	</div>
@@ -633,15 +663,22 @@ import Layout from '../layouts/Layout.astro';
 	const btnCopy = document.getElementById('btn-copy-text') as HTMLButtonElement;
 	const btnRecAnother = document.getElementById('btn-receive-another');
 	
-	// Elementos para Archivos
+	// Elementos para Archivos e Imágenes
 	const recStateFileSuccess = document.getElementById('receive-state-file-success');
 	const lblReceivedFileName = document.getElementById('received-file-name');
 	const btnDownloadFile = document.getElementById('btn-download-file');
 	const btnRecAnotherFile = document.getElementById('btn-receive-another-file');
 
+	const recStateImageSuccess = document.getElementById('receive-state-image-success');
+	const receivedImageElement = document.getElementById('received-image-element') as HTMLImageElement;
+	const btnCopyImage = document.getElementById('btn-copy-image');
+	const btnDownloadImage = document.getElementById('btn-download-image');
+	const btnRecAnotherImage = document.getElementById('btn-receive-another-image');
+
 	let recWs: WebSocket | null = null;
 	let incomingFileName = '';
 	let incomingFileBlobUrl = '';
+	let incomingFileIsImage = false;
 	
 	// Auto-focus logic for PIN inputs
 	pinInputs.forEach((input, index) => {
@@ -690,11 +727,13 @@ import Layout from '../layouts/Layout.astro';
 			URL.revokeObjectURL(incomingFileBlobUrl);
 			incomingFileBlobUrl = '';
 		}
+		if (receivedImageElement) receivedImageElement.src = '';
 		incomingFileName = '';
+		incomingFileIsImage = false;
 
 		checkPinComplete();
 		
-		transitionState([recStateSuccess, recStateFileSuccess], [recStateInitial], 'block');
+		transitionState([recStateSuccess, recStateFileSuccess, recStateImageSuccess], [recStateInitial], 'block');
 		setTimeout(() => {
 			pinInputs[0]?.focus();
 		}, 300); // Dar tiempo a la transición para enfocar
@@ -719,11 +758,18 @@ import Layout from '../layouts/Layout.astro';
 		};
 		
 		recWs.onmessage = (event) => {
-			// Manejar recepción de Binarios (Archivos)
+			// Manejar recepción de Binarios (Archivos/Imágenes)
 			if (event.data instanceof Blob) {
 				incomingFileBlobUrl = URL.createObjectURL(event.data);
 				
-				transitionState([recStateInitial], [recStateFileSuccess], 'flex');
+				if (incomingFileIsImage) {
+					if (receivedImageElement) receivedImageElement.src = incomingFileBlobUrl;
+					transitionState([recStateInitial], [recStateImageSuccess], 'flex');
+					window.showToast('Imagen recibida exitosamente');
+				} else {
+					transitionState([recStateInitial], [recStateFileSuccess], 'flex');
+					window.showToast('Archivo recibido exitosamente');
+				}
 				
 				recWs?.close(); // Cerrar tras recibir binario
 				return;
@@ -740,6 +786,13 @@ import Layout from '../layouts/Layout.astro';
 				} else if (data.action === 'file_received') {
 					// Guardamos metadatos y esperamos el Blob en el siguiente frame
 					incomingFileName = data.filename || 'archivo_recibido';
+					
+					// Detección simple si es imagen basada en extensión
+					const lowerName = incomingFileName.toLowerCase();
+					incomingFileIsImage = lowerName.endsWith('.png') || lowerName.endsWith('.jpg') || 
+										lowerName.endsWith('.jpeg') || lowerName.endsWith('.gif') || 
+										lowerName.endsWith('.webp');
+
 					if (lblReceivedFileName) lblReceivedFileName.textContent = incomingFileName;
 				} else if (data.action === 'error') {
 					window.showToast(data.message || 'Código incorrecto', 'error');
@@ -769,17 +822,41 @@ import Layout from '../layouts/Layout.astro';
 		}
 	});
 
-	btnDownloadFile?.addEventListener('click', () => {
-		if (!incomingFileBlobUrl) return;
+	const triggerDownload = (url: string, name: string) => {
+		if (!url) return;
 		const a = document.createElement('a');
-		a.href = incomingFileBlobUrl;
-		a.download = incomingFileName;
+		a.href = url;
+		a.download = name;
 		document.body.appendChild(a);
 		a.click();
 		document.body.removeChild(a);
+	};
+
+	btnDownloadFile?.addEventListener('click', () => triggerDownload(incomingFileBlobUrl, incomingFileName));
+	btnDownloadImage?.addEventListener('click', () => triggerDownload(incomingFileBlobUrl, incomingFileName));
+
+	btnCopyImage?.addEventListener('click', async () => {
+		try {
+			if (!incomingFileBlobUrl) return;
+			// Obtener el blob real desde la URL para el ClipboardItem
+			const response = await fetch(incomingFileBlobUrl);
+			const blob = await response.blob();
+			
+			await navigator.clipboard.write([
+				new ClipboardItem({
+					[blob.type]: blob
+				})
+			]);
+			
+			window.showToast('¡Imagen copiada al portapapeles!');
+		} catch (err) {
+			console.error('Error al copiar imagen: ', err);
+			window.showToast('Error al copiar imagen (El navegador puede no soportarlo)', 'error');
+		}
 	});
 
 	btnRecAnother?.addEventListener('click', resetReceiveView);
 	btnRecAnotherFile?.addEventListener('click', resetReceiveView);
+	btnRecAnotherImage?.addEventListener('click', resetReceiveView);
 
 </script>
