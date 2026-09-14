@@ -38,7 +38,7 @@ LocalDrop está compuesto por un Backend en Go y un Frontend en Astro+Tailwind. 
     make dev-tunnel
     ```
 
-    *(Nota: Si no tienes `make` instalado en tu sistema Windows, puedes hacer doble clic en el archivo `start.bat` incluido como alternativa rápida).*
+    *(Nota: Si usas Git Bash o WSL en Windows y no tienes `make`, puedes ejecutar directamente `./start.sh`).*
 
 Una vez iniciados los servicios:
 *   La aplicación estará disponible en `http://localhost:4321` (y una URL pública de `loca.lt/ngrok` si activaste el túnel).
