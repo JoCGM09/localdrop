@@ -10,7 +10,7 @@
 2. Añadir el campo `FileName` (string) al `ClipboardItem` y al `WSMessage`, necesario para que el receptor sepa cómo se llama el archivo original y su extensión.
 3. Asegurar que las validaciones de límite (ya ajustadas a 52MB en la fase previa) aplican también a esta nueva modalidad.
 
-## Grupo 3: Frontend Lógica Emisor (Archivos)
+## Grupo 3: Frontend Lógica Emisor (Archivos) [HECHO]
 1. Modificar la vista "Enviar" (la Dropzone de Fase 2) para aceptar archivos en general (`accept="*"` en el input file oculto, y manejar los eventos de *drag/drop* generalizados).
 2. Si el archivo capturado no es una imagen (sin *preview* visual), mostrar una caja informativa que indique el nombre del archivo (ej. `documento.pdf`) y su tamaño en MB.
 3. Modificar la lógica del WebSocket emisor para notificar al servidor `{"action": "send_file", "filename": "doc.pdf"}` y posteriormente enviar el Blob/ArrayBuffer.
