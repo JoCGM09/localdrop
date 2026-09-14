@@ -1,6 +1,6 @@
 # Plan de Implementación: Fase 4 - Pulido Final
 
-## Grupo 1: Integración de shadcn y UI/UX Base
+## Grupo 1: Integración de shadcn y UI/UX Base [HECHO]
 1. Inicializar la configuración base de `shadcn/ui` en el proyecto Astro (con soporte React o Vanilla si se prefiriese usar WebComponents simples para evitar más librerías) o crear los componentes base utilizando Tailwind puro basándose en la especificación de `specs/brand-definition.md`.
 2. Reemplazar los componentes nativos (botones, inputs, textarea) de la vista de "Enviar" y "Recibir" para que cumplan 100% con los Design Tokens de la marca.
 
