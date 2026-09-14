@@ -15,7 +15,7 @@
 2. Si el archivo capturado no es una imagen (sin *preview* visual), mostrar una caja informativa que indique el nombre del archivo (ej. `documento.pdf`) y su tamaño en MB.
 3. Modificar la lógica del WebSocket emisor para notificar al servidor `{"action": "send_file", "filename": "doc.pdf"}` y posteriormente enviar el Blob/ArrayBuffer.
 
-## Grupo 4: Frontend Lógica Receptor (Archivos)
+## Grupo 4: Frontend Lógica Receptor (Archivos) [HECHO]
 1. Modificar el cliente WebSocket para reaccionar a un nuevo tipo de acción entrante (ej. `file_received`).
 2. Diseñar e inyectar el componente UI correspondiente: En lugar de un `<textarea>` o una `<img>`, debe mostrar un contenedor con el ícono de un documento, el nombre (`filename` enviado desde el servidor) y un botón prominente de "Descargar".
 3. Al hacer clic en descargar, convertir el Payload binario recibido en un Blob temporal (`URL.createObjectURL(blob)`), forzar la descarga usando un `<a download="filename">` invisible y limpiar la memoria (`URL.revokeObjectURL`).

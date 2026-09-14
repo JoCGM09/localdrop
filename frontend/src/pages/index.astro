@@ -154,6 +154,34 @@ import Layout from '../layouts/Layout.astro';
 						<button id="btn-receive-another" class="flex-1 border border-slate-300 text-text-secondary font-semibold py-3 px-4 rounded-md hover:bg-slate-50 transition-colors">Volver</button>
 					</div>
 				</div>
+
+				<!-- Estado: Archivo Recibido -->
+				<div id="receive-state-file-success" class="hidden flex-col space-y-4">
+					<div class="flex items-center gap-2 text-success mb-2">
+						<svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+						<span class="font-medium">Archivo listo para descargar</span>
+					</div>
+					<div class="border border-slate-200 rounded-lg p-4 flex items-center justify-between bg-white shadow-sm">
+						<div class="flex items-center gap-3 overflow-hidden">
+							<svg class="h-8 w-8 text-primary flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+							</svg>
+							<div class="min-w-0">
+								<p id="received-file-name" class="text-sm font-medium text-text-main truncate">documento.pdf</p>
+							</div>
+						</div>
+					</div>
+					<div class="flex gap-3 pt-2">
+						<button 
+							id="btn-download-file"
+							class="flex-1 bg-primary hover:bg-blue-900 text-white font-semibold py-3 px-4 rounded-md transition-colors flex items-center justify-center gap-2"
+						>
+							<svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+							Descargar
+						</button>
+						<button id="btn-receive-another-file" class="flex-1 border border-slate-300 text-text-secondary font-semibold py-3 px-4 rounded-md hover:bg-slate-50 transition-colors">Volver</button>
+					</div>
+				</div>
 			</div>
 		</div>
 	</div>
@@ -475,7 +503,15 @@ import Layout from '../layouts/Layout.astro';
 	const btnCopy = document.getElementById('btn-copy-text') as HTMLButtonElement;
 	const btnRecAnother = document.getElementById('btn-receive-another');
 	
+	// Elementos para Archivos
+	const recStateFileSuccess = document.getElementById('receive-state-file-success');
+	const lblReceivedFileName = document.getElementById('received-file-name');
+	const btnDownloadFile = document.getElementById('btn-download-file');
+	const btnRecAnotherFile = document.getElementById('btn-receive-another-file');
+
 	let recWs: WebSocket | null = null;
+	let incomingFileName = '';
+	let incomingFileBlobUrl = '';
 	
 	// Auto-focus logic for PIN inputs
 	pinInputs.forEach((input, index) => {
@@ -519,10 +555,21 @@ import Layout from '../layouts/Layout.astro';
 		});
 		if (txtReceived) txtReceived.value = '';
 		if (btnCopy) btnCopy.innerHTML = '<svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg> Copiar texto';
+		
+		// Reset File states
+		if (incomingFileBlobUrl) {
+			URL.revokeObjectURL(incomingFileBlobUrl);
+			incomingFileBlobUrl = '';
+		}
+		incomingFileName = '';
+
 		checkPinComplete();
 		
 		recStateSuccess?.classList.add('hidden');
 		recStateSuccess?.classList.remove('flex');
+		recStateFileSuccess?.classList.add('hidden');
+		recStateFileSuccess?.classList.remove('flex');
+		
 		recStateInitial?.classList.remove('hidden');
 		recStateInitial?.classList.add('block');
 		pinInputs[0]?.focus();
@@ -538,6 +585,7 @@ import Layout from '../layouts/Layout.astro';
 		const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
 		const host = window.location.host;
 		recWs = new WebSocket(`${protocol}//${host}/ws`);
+		recWs.binaryType = 'blob'; // Prepara para recibir archivos
 		
 		recWs.onopen = () => {
 			recWs?.send(JSON.stringify({
@@ -547,6 +595,20 @@ import Layout from '../layouts/Layout.astro';
 		};
 		
 		recWs.onmessage = (event) => {
+			// Manejar recepción de Binarios (Archivos)
+			if (event.data instanceof Blob) {
+				incomingFileBlobUrl = URL.createObjectURL(event.data);
+				
+				recStateInitial?.classList.add('hidden');
+				recStateInitial?.classList.remove('block');
+				recStateFileSuccess?.classList.remove('hidden');
+				recStateFileSuccess?.classList.add('flex');
+				
+				recWs?.close(); // Cerrar tras recibir binario
+				return;
+			}
+
+			// Manejar recepción de JSON (Textos o Metadatos de archivo)
 			try {
 				const data = JSON.parse(event.data);
 				if (data.action === 'text_received') {
@@ -555,7 +617,11 @@ import Layout from '../layouts/Layout.astro';
 					recStateInitial?.classList.remove('block');
 					recStateSuccess?.classList.remove('hidden');
 					recStateSuccess?.classList.add('flex');
-					recWs?.close(); // Cerrar al recibir
+					recWs?.close(); // Cerrar al recibir texto
+				} else if (data.action === 'file_received') {
+					// Guardamos metadatos y esperamos el Blob en el siguiente frame
+					incomingFileName = data.filename || 'archivo_recibido';
+					if (lblReceivedFileName) lblReceivedFileName.textContent = incomingFileName;
 				} else if (data.action === 'error') {
 					if(recErrorMsg) {
 						recErrorMsg.textContent = data.message || 'Código incorrecto';
@@ -589,6 +655,17 @@ import Layout from '../layouts/Layout.astro';
 		}
 	});
 
+	btnDownloadFile?.addEventListener('click', () => {
+		if (!incomingFileBlobUrl) return;
+		const a = document.createElement('a');
+		a.href = incomingFileBlobUrl;
+		a.download = incomingFileName;
+		document.body.appendChild(a);
+		a.click();
+		document.body.removeChild(a);
+	});
+
 	btnRecAnother?.addEventListener('click', resetReceiveView);
+	btnRecAnotherFile?.addEventListener('click', resetReceiveView);
 
 </script>
