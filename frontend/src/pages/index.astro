@@ -79,7 +79,6 @@ import Layout from '../layouts/Layout.astro';
 					>
 						Generar PIN
 					</button>
-					<p id="send-error" class="text-error text-sm text-center hidden"></p>
 				</div>
 
 				<!-- Estado: Esperando Receptor -->
@@ -119,7 +118,6 @@ import Layout from '../layouts/Layout.astro';
 						<input type="text" inputmode="numeric" maxlength="1" class="pin-input w-14 h-16 text-center text-2xl font-bold font-mono border border-slate-200 bg-white rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 transition-colors disabled:cursor-not-allowed disabled:opacity-50" disabled />
 						<input type="text" inputmode="numeric" maxlength="1" class="pin-input w-14 h-16 text-center text-2xl font-bold font-mono border border-slate-200 bg-white rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 transition-colors disabled:cursor-not-allowed disabled:opacity-50" disabled />
 					</div>
-					<p id="receive-error" class="text-error text-sm hidden"></p>
 					<button 
 						id="btn-receive-text"
 						class="inline-flex w-full items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-white hover:bg-blue-900 h-11 px-8"
@@ -239,7 +237,6 @@ import Layout from '../layouts/Layout.astro';
 	const txtToSend = document.getElementById('text-to-send') as HTMLTextAreaElement;
 	const btnGeneratePin = document.getElementById('btn-generate-pin') as HTMLButtonElement;
 	const displayPin = document.getElementById('display-pin');
-	const errorMsg = document.getElementById('send-error');
 	
 	const btnCancelSend = document.getElementById('btn-cancel-send');
 	const btnSendAnother = document.getElementById('btn-send-another');
@@ -276,7 +273,6 @@ import Layout from '../layouts/Layout.astro';
 
 		containerText?.classList.replace('hidden', 'block');
 		containerFile?.classList.replace('block', 'hidden');
-		if(errorMsg) errorMsg.classList.add('hidden');
 	});
 
 	btnSendTypeFile?.addEventListener('click', () => {
@@ -291,7 +287,6 @@ import Layout from '../layouts/Layout.astro';
 
 		containerFile?.classList.replace('hidden', 'block');
 		containerText?.classList.replace('block', 'hidden');
-		if(errorMsg) errorMsg.classList.add('hidden');
 	});
 
 	// --- Lógica Dropzone y Archivos ---
@@ -306,7 +301,7 @@ import Layout from '../layouts/Layout.astro';
 
 	const handleFileSelection = (file: File) => {
 		if (file.size > MAX_FILE_SIZE) {
-			showError(`El archivo es muy grande (${formatBytes(file.size)}). El máximo es 50MB.`);
+			window.showToast(`El archivo es muy grande (${formatBytes(file.size)}). El máximo es 50MB.`, 'error');
 			return;
 		}
 		selectedFile = file;
@@ -315,7 +310,6 @@ import Layout from '../layouts/Layout.astro';
 		
 		dropzone?.classList.replace('flex', 'hidden');
 		filePreviewContainer?.classList.replace('hidden', 'flex');
-		if(errorMsg) errorMsg.classList.add('hidden');
 	};
 
 	const removeFile = () => {
@@ -379,7 +373,6 @@ import Layout from '../layouts/Layout.astro';
 		}
 		txtToSend.value = '';
 		removeFile();
-		if(errorMsg) errorMsg.classList.add('hidden');
 		btnGeneratePin.disabled = false;
 		
 		stateInitial?.classList.remove('hidden');
@@ -415,10 +408,7 @@ import Layout from '../layouts/Layout.astro';
 	};
 
 	const showError = (msg: string) => {
-		if(errorMsg) {
-			errorMsg.textContent = msg;
-			errorMsg.classList.remove('hidden');
-		}
+		window.showToast(msg, 'error');
 		btnGeneratePin.disabled = false;
 	};
 
@@ -436,7 +426,6 @@ import Layout from '../layouts/Layout.astro';
 			}
 		}
 
-		if(errorMsg) errorMsg.classList.add('hidden');
 		btnGeneratePin.disabled = true;
 
 		// Conectar al WebSocket proxificado por Vite/Astro para evitar problemas con Ngrok
@@ -472,6 +461,7 @@ import Layout from '../layouts/Layout.astro';
 					showWaitingState(data.pin);
 				} else if (data.action === 'transfer_complete') {
 					showSuccessState();
+					window.showToast('¡El receptor descargó el archivo con éxito!');
 				} else if (data.action === 'error') {
 					showError(data.message || 'Error desconocido');
 					resetSendView();
@@ -498,7 +488,6 @@ import Layout from '../layouts/Layout.astro';
 	const recStateSuccess = document.getElementById('receive-state-success');
 	const pinInputs = document.querySelectorAll('.pin-input') as NodeListOf<HTMLInputElement>;
 	const btnReceive = document.getElementById('btn-receive-text') as HTMLButtonElement;
-	const recErrorMsg = document.getElementById('receive-error');
 	const txtReceived = document.getElementById('received-text') as HTMLTextAreaElement;
 	const btnCopy = document.getElementById('btn-copy-text') as HTMLButtonElement;
 	const btnRecAnother = document.getElementById('btn-receive-another');
@@ -541,7 +530,6 @@ import Layout from '../layouts/Layout.astro';
 	const checkPinComplete = () => {
 		const pin = Array.from(pinInputs).map(i => i.value).join('');
 		if (btnReceive) btnReceive.disabled = pin.length !== 4;
-		if(recErrorMsg) recErrorMsg.classList.add('hidden');
 	};
 
 	const resetReceiveView = () => {
@@ -580,7 +568,6 @@ import Layout from '../layouts/Layout.astro';
 		if (pin.length !== 4) return;
 		
 		btnReceive.disabled = true;
-		if(recErrorMsg) recErrorMsg.classList.add('hidden');
 		
 		const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
 		const host = window.location.host;
@@ -617,26 +604,21 @@ import Layout from '../layouts/Layout.astro';
 					recStateInitial?.classList.remove('block');
 					recStateSuccess?.classList.remove('hidden');
 					recStateSuccess?.classList.add('flex');
+					window.showToast('Texto recibido exitosamente');
 					recWs?.close(); // Cerrar al recibir texto
 				} else if (data.action === 'file_received') {
 					// Guardamos metadatos y esperamos el Blob en el siguiente frame
 					incomingFileName = data.filename || 'archivo_recibido';
 					if (lblReceivedFileName) lblReceivedFileName.textContent = incomingFileName;
 				} else if (data.action === 'error') {
-					if(recErrorMsg) {
-						recErrorMsg.textContent = data.message || 'Código incorrecto';
-						recErrorMsg.classList.remove('hidden');
-					}
+					window.showToast(data.message || 'Código incorrecto', 'error');
 					btnReceive.disabled = false;
 				}
 			} catch(e) {}
 		};
 		
 		recWs.onerror = () => {
-			if(recErrorMsg) {
-				recErrorMsg.textContent = 'Error de conexión con el servidor.';
-				recErrorMsg.classList.remove('hidden');
-			}
+			window.showToast('Error de conexión con el servidor.', 'error');
 			btnReceive.disabled = false;
 		};
 	});
@@ -645,6 +627,7 @@ import Layout from '../layouts/Layout.astro';
 		try {
 			if (txtReceived) {
 				await navigator.clipboard.writeText(txtReceived.value);
+				window.showToast('¡Copiado al portapapeles!');
 				btnCopy.innerHTML = '<svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg> ¡Copiado!';
 				setTimeout(() => {
 					btnCopy.innerHTML = '<svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg> Copiar texto';

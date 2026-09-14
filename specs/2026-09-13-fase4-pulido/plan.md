@@ -4,7 +4,7 @@
 1. Inicializar la configuración base de `shadcn/ui` en el proyecto Astro (con soporte React o Vanilla si se prefiriese usar WebComponents simples para evitar más librerías) o crear los componentes base utilizando Tailwind puro basándose en la especificación de `specs/brand-definition.md`.
 2. Reemplazar los componentes nativos (botones, inputs, textarea) de la vista de "Enviar" y "Recibir" para que cumplan 100% con los Design Tokens de la marca.
 
-## Grupo 2: Sistema de Notificaciones (Toasts)
+## Grupo 2: Sistema de Notificaciones (Toasts) [HECHO]
 1. Implementar o instalar un sistema de Toasts (ej. Sonner, o uno custom con Tailwind + JS) global en el `Layout.astro`.
 2. Eliminar todos los mensajes de error `<p id="send-error">` estáticos del HTML.
 3. Actualizar la lógica en JavaScript para que:

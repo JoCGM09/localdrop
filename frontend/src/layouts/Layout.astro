@@ -31,5 +31,58 @@ const { title = "LocalDrop" } = Astro.props;
         <footer class="py-6 text-center text-text-secondary text-sm">
             <p>Solo red local (LAN) &bull; Efímero y seguro</p>
         </footer>
+
+		<!-- Contenedor global de Toasts -->
+		<div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 pointer-events-none"></div>
+		
+		<!-- Toast Script Global -->
+		<script>
+			// Extendemos el objeto window para TypeScript
+			declare global {
+				interface Window {
+					showToast: (message: string, type?: 'success' | 'error') => void;
+				}
+			}
+
+			window.showToast = (message: string, type: 'success' | 'error' = 'success') => {
+				const container = document.getElementById('toast-container');
+				if (!container) return;
+
+				const toast = document.createElement('div');
+				
+				// Clases base tipo shadcn
+				let classes = "flex items-center gap-2 p-4 rounded-md shadow-lg transform transition-all duration-300 translate-y-2 opacity-0 text-sm font-medium border pointer-events-auto min-w-[250px]";
+				
+				if (type === 'error') {
+					classes += " bg-white text-error border-red-200";
+					toast.innerHTML = `
+						<svg class="h-5 w-5 text-error flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+						<span>${message}</span>
+					`;
+				} else {
+					classes += " bg-white text-text-main border-slate-200";
+					toast.innerHTML = `
+						<svg class="h-5 w-5 text-success flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+						<span>${message}</span>
+					`;
+				}
+				
+				toast.className = classes;
+				container.appendChild(toast);
+
+				// Animar entrada
+				requestAnimationFrame(() => {
+					toast.classList.remove('translate-y-2', 'opacity-0');
+					toast.classList.add('translate-y-0', 'opacity-100');
+				});
+
+				// Remover después de 3.5s
+				setTimeout(() => {
+					toast.classList.remove('translate-y-0', 'opacity-100');
+					toast.classList.add('translate-y-2', 'opacity-0');
+					setTimeout(() => toast.remove(), 300); // Esperar que termine transición
+				}, 3500);
+			};
+		</script>
 	</body>
 </html>
