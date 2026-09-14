@@ -29,13 +29,16 @@ LocalDrop está compuesto por un Backend en Go y un Frontend en Astro+Tailwind. 
     cd frontend && npm install && cd ..
     ```
 3.  **Inicia la Aplicación:**
-    En la raíz del proyecto, ejecuta el script de arranque desde tu terminal:
+    En la raíz del proyecto, ejecuta el Makefile desde tu terminal:
     ```bash
-    # En Windows
-    start.bat
+    # Para arrancar solo de forma local
+    make dev
+
+    # O si necesitas usar Ngrok para el celular (bloqueos de router)
+    make dev-tunnel
     ```
 
-El script te preguntará si quieres iniciar un entorno `localhost` puro o generar un túnel Ngrok (si tienes problemas con que tu celular alcance a tu laptop por Wi-Fi debido a reglas del firewall).
+    *(Nota: Si no tienes `make` instalado en tu sistema Windows, puedes hacer doble clic en el archivo `start.bat` incluido como alternativa rápida).*
 
 Una vez iniciados los servicios:
 *   La aplicación estará disponible en `http://localhost:4321` (y una URL pública de `loca.lt/ngrok` si activaste el túnel).
