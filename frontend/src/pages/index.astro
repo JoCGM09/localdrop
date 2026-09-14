@@ -260,6 +260,32 @@ import Layout from '../layouts/Layout.astro';
 	let selectedFile: File | null = null;
 	const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
 
+	// Utilidad para transiciones suaves
+	const transitionState = (hideElements: (HTMLElement | null)[], showElements: (HTMLElement | null)[], displayClass: string = 'block') => {
+		hideElements.forEach(el => {
+			if (!el) return;
+			el.classList.add('opacity-0', 'transition-opacity', 'duration-200');
+			setTimeout(() => {
+				el.classList.add('hidden');
+				el.classList.remove('block', 'flex');
+				el.classList.remove('opacity-0', 'transition-opacity', 'duration-200');
+			}, 200);
+		});
+
+		setTimeout(() => {
+			showElements.forEach(el => {
+				if (!el) return;
+				el.classList.remove('hidden');
+				el.classList.add(displayClass);
+				el.classList.add('opacity-0', 'transition-opacity', 'duration-200');
+				// Force reflow
+				void el.offsetWidth;
+				el.classList.remove('opacity-0');
+				el.classList.add('opacity-100');
+			});
+		}, 200);
+	};
+
 	// --- Lógica de Tabs internos ---
 	btnSendTypeText?.addEventListener('click', () => {
 		currentSendMode = 'text';
@@ -375,24 +401,12 @@ import Layout from '../layouts/Layout.astro';
 		removeFile();
 		btnGeneratePin.disabled = false;
 		
-		stateInitial?.classList.remove('hidden');
-		stateInitial?.classList.add('block');
-		
-		stateWaiting?.classList.remove('flex');
-		stateWaiting?.classList.add('hidden');
-		
-		stateSuccess?.classList.remove('flex');
-		stateSuccess?.classList.add('hidden');
+		transitionState([stateWaiting, stateSuccess], [stateInitial], 'block');
 	};
 
 	const showWaitingState = (pin: string) => {
 		if(displayPin) displayPin.textContent = pin;
-		
-		stateInitial?.classList.add('hidden');
-		stateInitial?.classList.remove('block');
-		
-		stateWaiting?.classList.remove('hidden');
-		stateWaiting?.classList.add('flex');
+		transitionState([stateInitial], [stateWaiting], 'flex');
 	};
 
 	const showSuccessState = () => {
@@ -400,11 +414,7 @@ import Layout from '../layouts/Layout.astro';
 			ws.close();
 			ws = null;
 		}
-		stateWaiting?.classList.add('hidden');
-		stateWaiting?.classList.remove('flex');
-		
-		stateSuccess?.classList.remove('hidden');
-		stateSuccess?.classList.add('flex');
+		transitionState([stateWaiting], [stateSuccess], 'flex');
 	};
 
 	const showError = (msg: string) => {
@@ -553,14 +563,10 @@ import Layout from '../layouts/Layout.astro';
 
 		checkPinComplete();
 		
-		recStateSuccess?.classList.add('hidden');
-		recStateSuccess?.classList.remove('flex');
-		recStateFileSuccess?.classList.add('hidden');
-		recStateFileSuccess?.classList.remove('flex');
-		
-		recStateInitial?.classList.remove('hidden');
-		recStateInitial?.classList.add('block');
-		pinInputs[0]?.focus();
+		transitionState([recStateSuccess, recStateFileSuccess], [recStateInitial], 'block');
+		setTimeout(() => {
+			pinInputs[0]?.focus();
+		}, 300); // Dar tiempo a la transición para enfocar
 	};
 
 	btnReceive?.addEventListener('click', () => {
@@ -586,10 +592,7 @@ import Layout from '../layouts/Layout.astro';
 			if (event.data instanceof Blob) {
 				incomingFileBlobUrl = URL.createObjectURL(event.data);
 				
-				recStateInitial?.classList.add('hidden');
-				recStateInitial?.classList.remove('block');
-				recStateFileSuccess?.classList.remove('hidden');
-				recStateFileSuccess?.classList.add('flex');
+				transitionState([recStateInitial], [recStateFileSuccess], 'flex');
 				
 				recWs?.close(); // Cerrar tras recibir binario
 				return;
@@ -600,10 +603,7 @@ import Layout from '../layouts/Layout.astro';
 				const data = JSON.parse(event.data);
 				if (data.action === 'text_received') {
 					if (txtReceived) txtReceived.value = data.payload || '';
-					recStateInitial?.classList.add('hidden');
-					recStateInitial?.classList.remove('block');
-					recStateSuccess?.classList.remove('hidden');
-					recStateSuccess?.classList.add('flex');
+					transitionState([recStateInitial], [recStateSuccess], 'flex');
 					window.showToast('Texto recibido exitosamente');
 					recWs?.close(); // Cerrar al recibir texto
 				} else if (data.action === 'file_received') {

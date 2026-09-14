@@ -12,7 +12,7 @@
    - La acción de Copiar texto o terminar transferencia dispare un Toast Verde de éxito.
    - La subida de un archivo excedido dispare una advertencia.
 
-## Grupo 3: Refinamiento del Flujo WebSockets
+## Grupo 3: Refinamiento del Flujo WebSockets [HECHO]
 1. Ajustar los estados visuales (`state-waiting`, `state-success`) añadiendo micro-interacciones (ej. transiciones suaves de opacidad) al cambiar entre ellos en lugar de un cambio abrupto `display: none/block`.
 2. Validar que la interfaz se reinicie correctamente sin fugas de memoria al presionar "Volver" o cancelar el envío en cualquier punto.
 
