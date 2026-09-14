@@ -16,16 +16,19 @@ import (
 
 const (
 	// Límites de seguridad
-	MaxPayloadSize = 10 * 1024 * 1024 // 10 MB para textos largos
+	MaxPayloadSize = 52 * 1024 * 1024 // 52 MB para soportar imágenes de hasta 50MB + overhead
 	MaxPINsPerConn = 5                // Máximo de PINs activos por conexión (evita saturación)
 	MaxFailures    = 10               // Intentos máximos antes de desconectar
 )
 
-// ClipboardItem representa un texto guardado temporalmente.
+// ClipboardItem representa un dato guardado temporalmente (texto o binario).
 type ClipboardItem struct {
-	Text      string
-	Sender    *websocket.Conn
-	ExpiresAt time.Time
+	PayloadType string // "text" o "image"
+	Text        string
+	Binary      []byte
+	Ext         string // Extensión para la imagen, ej: "png"
+	Sender      *websocket.Conn
+	ExpiresAt   time.Time
 }
 
 // Store maneja la memoria efímera de manera concurrente.
@@ -64,47 +67,45 @@ func (s *Store) GeneratePIN() string {
 	}
 }
 
-// Save guarda el texto, controla el límite por conexión, y retorna el PIN.
-func (s *Store) Save(text string, sender *websocket.Conn) (string, error) {
+// Save guarda el dato, controla el límite por conexión, y retorna el PIN.
+func (s *Store) Save(item ClipboardItem) (string, error) {
 	s.mu.Lock()
-	if s.pinsCount[sender] >= MaxPINsPerConn {
+	if s.pinsCount[item.Sender] >= MaxPINsPerConn {
 		s.mu.Unlock()
 		return "", fmt.Errorf("límite de PINs alcanzado (max %d)", MaxPINsPerConn)
 	}
 	s.mu.Unlock()
 
 	pin := s.GeneratePIN()
+	item.ExpiresAt = time.Now().Add(5 * time.Minute)
+
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	s.items[pin] = ClipboardItem{
-		Text:      text,
-		Sender:    sender,
-		ExpiresAt: time.Now().Add(5 * time.Minute),
-	}
-	s.pinsCount[sender]++
+	s.items[pin] = item
+	s.pinsCount[item.Sender]++
 	return pin, nil
 }
 
-// Retrieve obtiene el texto y lleva control de intentos fallidos.
-func (s *Store) Retrieve(pin string, receiver *websocket.Conn) (string, *websocket.Conn, error) {
+// Retrieve obtiene el dato y lleva control de intentos fallidos.
+func (s *Store) Retrieve(pin string, receiver *websocket.Conn) (ClipboardItem, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
 	// Control de fuerza bruta
 	if s.failedAttempts[receiver] >= MaxFailures {
-		return "", nil, fmt.Errorf("demasiados intentos fallidos")
+		return ClipboardItem{}, fmt.Errorf("demasiados intentos fallidos")
 	}
 
 	item, exists := s.items[pin]
 	if !exists {
 		s.failedAttempts[receiver]++
-		return "", nil, fmt.Errorf("PIN no encontrado o expirado")
+		return ClipboardItem{}, fmt.Errorf("PIN no encontrado o expirado")
 	}
 	
 	// Éxito: borrar pin y resetear fallos (si aplicara)
 	delete(s.items, pin)
 	s.pinsCount[item.Sender]--
-	return item.Text, item.Sender, nil
+	return item, nil
 }
 
 // RemoveByConnection limpia datos cuando un cliente se desconecta.
@@ -142,8 +143,10 @@ var upgrader = websocket.Upgrader{
 		if origin == "" {
 			return true // Permitir clientes no-browser que no envían Origin (como curl o tools CLI)
 		}
-		// Validar (simplificado): localhost, 127.0.0.1, y red privada
-		if strings.Contains(origin, "localhost") || strings.Contains(origin, "127.0.0.1") || strings.Contains(origin, "192.168.") {
+		// Validar (simplificado): localhost, 127.0.0.1, y redes privadas (LAN, Hotspot, Tailscale, VPNs)
+		if strings.Contains(origin, "localhost") || strings.Contains(origin, "127.0.0.1") || 
+			strings.Contains(origin, "192.168.") || strings.Contains(origin, "10.") || 
+			strings.Contains(origin, "172.") || strings.Contains(origin, "100.") {
 			return true
 		}
 		log.Printf("Origen denegado: %s", origin)
@@ -155,6 +158,7 @@ type WSMessage struct {
 	Action  string `json:"action"`
 	Payload string `json:"payload,omitempty"`
 	PIN     string `json:"pin,omitempty"`
+	Ext     string `json:"ext,omitempty"`
 }
 
 func handleConnections(w http.ResponseWriter, r *http.Request, store *Store) {
@@ -169,9 +173,11 @@ func handleConnections(w http.ResponseWriter, r *http.Request, store *Store) {
 	// Límite de tamaño del payload para evitar DoS por memoria
 	conn.SetReadLimit(MaxPayloadSize)
 
+	var waitingForBinary bool
+	var expectedExt string
+
 	for {
-		var msg WSMessage
-		err := conn.ReadJSON(&msg)
+		messageType, p, err := conn.ReadMessage()
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
 				log.Printf("error de lectura WS: %v", err)
@@ -179,9 +185,18 @@ func handleConnections(w http.ResponseWriter, r *http.Request, store *Store) {
 			break
 		}
 
-		switch msg.Action {
-		case "send_text":
-			pin, err := store.Save(msg.Payload, conn)
+		if messageType == websocket.BinaryMessage {
+			if !waitingForBinary {
+				continue // Ignorar binarios no esperados
+			}
+			pin, err := store.Save(ClipboardItem{
+				PayloadType: "image",
+				Binary:      p,
+				Ext:         expectedExt,
+				Sender:      conn,
+			})
+			waitingForBinary = false
+
 			if err != nil {
 				conn.WriteJSON(map[string]string{
 					"action":  "error",
@@ -193,8 +208,43 @@ func handleConnections(w http.ResponseWriter, r *http.Request, store *Store) {
 				"action": "pin_generated",
 				"pin":    pin,
 			})
+			continue
+		}
+
+		// Es un mensaje de texto (JSON)
+		var msg WSMessage
+		if err := json.Unmarshal(p, &msg); err != nil {
+			continue // Omitir mensajes malformados
+		}
+
+		switch msg.Action {
+		case "send_text":
+			pin, err := store.Save(ClipboardItem{
+				PayloadType: "text",
+				Text:        msg.Payload,
+				Sender:      conn,
+			})
+			if err != nil {
+				conn.WriteJSON(map[string]string{
+					"action":  "error",
+					"message": err.Error(),
+				})
+				continue
+			}
+			conn.WriteJSON(map[string]string{
+				"action": "pin_generated",
+				"pin":    pin,
+			})
+
+		case "send_image":
+			expectedExt = msg.Ext
+			waitingForBinary = true
+			conn.WriteJSON(map[string]string{
+				"action": "ready_for_binary",
+			})
+
 		case "receive_text":
-			text, senderConn, err := store.Retrieve(msg.PIN, conn)
+			item, err := store.Retrieve(msg.PIN, conn)
 			if err != nil {
 				conn.WriteJSON(map[string]string{
 					"action":  "error",
@@ -206,15 +256,25 @@ func handleConnections(w http.ResponseWriter, r *http.Request, store *Store) {
 				continue
 			}
 
-			// Enviar el texto al receptor
-			conn.WriteJSON(map[string]string{
-				"action":  "text_received",
-				"payload": text,
-			})
+			if item.PayloadType == "image" {
+				// Enviar metadatos
+				conn.WriteJSON(map[string]string{
+					"action": "image_received",
+					"ext":    item.Ext,
+				})
+				// Enviar binario
+				conn.WriteMessage(websocket.BinaryMessage, item.Binary)
+			} else {
+				// Enviar texto
+				conn.WriteJSON(map[string]string{
+					"action":  "text_received",
+					"payload": item.Text,
+				})
+			}
 
 			// Notificar al emisor que la transferencia fue exitosa
-			if senderConn != nil {
-				senderConn.WriteJSON(map[string]string{
+			if item.Sender != nil {
+				item.Sender.WriteJSON(map[string]string{
 					"action": "transfer_complete",
 				})
 			}
