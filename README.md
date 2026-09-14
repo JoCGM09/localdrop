@@ -8,7 +8,7 @@
 
 *   **Zero-Storage & Memoria Efímera:** Ningún archivo o texto toca el disco duro ni se almacena en bases de datos. Todo vive temporalmente en la memoria RAM del servidor Go y se borra inmediatamente tras ser recibido o al expirar tras 5 minutos.
 *   **Sin Cuentas ni Registros:** La autenticación se realiza mediante un código PIN numérico de 4 dígitos generado al instante para cada transferencia.
-*   **📋 Clipboard Nativo de Imágenes:** Puedes hacer un recorte de pantalla (`Win + Shift + S` o `PrtScn`), presionar `Ctrl+V` en la pestaña de Imagen, enviar el PIN, y en tu celular presionar "Copiar" para tener la imagen directamente en el portapapeles de tu teléfono.
+*   **Clipboard Nativo de Imágenes:** Puedes hacer un recorte de pantalla (`Win + Shift + S` o `PrtScn`), presionar `Ctrl+V` en la pestaña de Imagen, enviar el PIN, y en tu celular presionar "Copiar" para tener la imagen directamente en el portapapeles de tu teléfono.
 *   **Seguridad Integrada:** Protección contra ataques de fuerza bruta asociados a la IP del cliente, validación estricta de tamaño en cliente y servidor, y sanitización de orígenes CORS/CSWSH.
 
 ---
