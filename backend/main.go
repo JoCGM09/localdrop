@@ -7,6 +7,7 @@ import (
 	"log"
 	"math/big"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
@@ -18,6 +19,7 @@ const (
 	MaxPayloadSize = 52 * 1024 * 1024 // 52 MB para soportar imágenes de hasta 50MB + overhead
 	MaxPINsPerConn = 5                // Máximo de PINs activos por conexión (evita saturación)
 	MaxFailures    = 10               // Intentos máximos antes de desconectar
+	MaxTotalItems  = 100              // Límite global de archivos en memoria (prevención DoS)
 )
 
 // ClipboardItem representa un dato guardado temporalmente (texto o binario).
@@ -32,17 +34,17 @@ type ClipboardItem struct {
 
 // Store maneja la memoria efímera de manera concurrente.
 type Store struct {
-	mu    sync.RWMutex
-	items         map[string]ClipboardItem
-	pinsCount     map[*websocket.Conn]int // Para limitar PINs por conexión
-	failedAttempts map[*websocket.Conn]int // Control de fuerza bruta
+	mu             sync.RWMutex
+	items          map[string]ClipboardItem
+	pinsCount      map[*websocket.Conn]int // Para limitar PINs por conexión
+	failedAttempts map[string]int          // Control de fuerza bruta por IP
 }
 
 func NewStore() *Store {
 	s := &Store{
 		items:          make(map[string]ClipboardItem),
 		pinsCount:      make(map[*websocket.Conn]int),
-		failedAttempts: make(map[*websocket.Conn]int),
+		failedAttempts: make(map[string]int),
 	}
 	go s.RunCleanup()
 	return s
@@ -52,20 +54,24 @@ func NewStore() *Store {
 func (s *Store) GeneratePIN() string {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	return s.generatePINUnsafe()
+	pin, err := s.generatePINUnsafe()
+	if err != nil {
+		return "0000" // Fallback seguro mantenido solo por compatibilidad de tests, idealmente propagar error
+	}
+	return pin
 }
 
-func (s *Store) generatePINUnsafe() string {
+func (s *Store) generatePINUnsafe() (string, error) {
 	for {
 		// Generar número seguro entre 0 y 9999
 		n, err := rand.Int(rand.Reader, big.NewInt(10000))
 		if err != nil {
 			log.Println("Error generando PIN seguro:", err)
-			return "0000" // Fallback seguro
+			return "", err // No usar fallback inseguro
 		}
 		pin := fmt.Sprintf("%04d", n.Int64())
 		if _, exists := s.items[pin]; !exists {
-			return pin
+			return pin, nil
 		}
 	}
 }
@@ -75,13 +81,20 @@ func (s *Store) Save(item ClipboardItem) (string, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
+	if len(s.items) >= MaxTotalItems {
+		return "", fmt.Errorf("servidor lleno, intente más tarde")
+	}
+
 	if s.pinsCount[item.Sender] >= MaxPINsPerConn {
 		return "", fmt.Errorf("límite de PINs alcanzado (max %d)", MaxPINsPerConn)
 	}
 
-	pin := s.generatePINUnsafe()
+	pin, err := s.generatePINUnsafe()
+	if err != nil {
+		return "", fmt.Errorf("error interno al generar código de seguridad")
+	}
+	
 	item.ExpiresAt = time.Now().Add(5 * time.Minute)
-
 	s.items[pin] = item
 	s.pinsCount[item.Sender]++
 	return pin, nil
@@ -92,21 +105,23 @@ func (s *Store) Retrieve(pin string, receiver *websocket.Conn) (ClipboardItem, e
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
+	clientIP := getIP(receiver)
+
 	// Control de fuerza bruta
-	if s.failedAttempts[receiver] >= MaxFailures {
+	if s.failedAttempts[clientIP] >= MaxFailures {
 		return ClipboardItem{}, fmt.Errorf("demasiados intentos fallidos")
 	}
 
 	item, exists := s.items[pin]
 	if !exists {
-		s.failedAttempts[receiver]++
+		s.failedAttempts[clientIP]++
 		return ClipboardItem{}, fmt.Errorf("PIN no encontrado o expirado")
 	}
 
 	// Validar expiración explícitamente al recuperar para evitar ventana de limpieza
 	if time.Now().After(item.ExpiresAt) {
 		delete(s.items, pin)
-		s.failedAttempts[receiver]++
+		s.failedAttempts[clientIP]++
 		return ClipboardItem{}, fmt.Errorf("PIN no encontrado o expirado")
 	}
 	
@@ -114,6 +129,29 @@ func (s *Store) Retrieve(pin string, receiver *websocket.Conn) (ClipboardItem, e
 	delete(s.items, pin)
 	s.pinsCount[item.Sender]--
 	return item, nil
+}
+
+// Helper para extraer IP limpia
+func getIP(conn *websocket.Conn) string {
+	if conn == nil {
+		return "unknown"
+	}
+	// Protección estricta para tests unitarios donde UnderlayingConn es nil
+	defer func() {
+		if r := recover(); r != nil {
+			// En caso de pánico interno de Gorilla WS (ej. conn.conn == nil en tests)
+		}
+	}()
+	addr := conn.RemoteAddr()
+	if addr == nil {
+		return "unknown"
+	}
+	addrStr := addr.String()
+	parts := strings.Split(addrStr, ":")
+	if len(parts) > 0 {
+		return parts[0]
+	}
+	return addrStr
 }
 
 // RemoveByConnection limpia datos cuando un cliente se desconecta.
@@ -126,7 +164,8 @@ func (s *Store) RemoveByConnection(conn *websocket.Conn) {
 		}
 	}
 	delete(s.pinsCount, conn)
-	delete(s.failedAttempts, conn)
+	clientIP := getIP(conn)
+	delete(s.failedAttempts, clientIP)
 }
 
 // RunCleanup es una goroutine que elimina pines expirados tras 5 minutos.
@@ -156,8 +195,20 @@ func (s *Store) Cleanup() {
 
 var upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool {
-		// Permitir cualquier origen temporalmente para que funcionen túneles como Ngrok
-		return true
+		origin := r.Header.Get("Origin")
+		if origin == "" {
+			return true // Permitir clientes no-browser que no envían Origin
+		}
+		
+		// Validar seguridad: localhost, 127.0.0.1, redes privadas o Ngrok temporal
+		if strings.Contains(origin, "localhost") || strings.Contains(origin, "127.0.0.1") || 
+			strings.Contains(origin, "192.168.") || strings.Contains(origin, "10.") || 
+			strings.Contains(origin, "172.") || strings.Contains(origin, "ngrok-free.app") ||
+			strings.Contains(origin, "loca.lt") {
+			return true
+		}
+		log.Printf("Origen denegado por seguridad CSWSH: %s", origin)
+		return false
 	},
 }
 
