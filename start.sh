@@ -22,22 +22,17 @@ cleanup() {
 trap cleanup SIGINT
 
 echo -e "${GREEN}[1/2] Iniciando Backend (Go) en puerto 8080...${NC}"
-cd backend && go run main.go &
-BACKEND_PID=$!
+(cd backend && go run main.go) &
 
 echo -e "${GREEN}[2/2] Iniciando Frontend (Astro) en puerto 4321...${NC}"
-cd ../frontend && npm run dev &
-FRONTEND_PID=$!
-cd ..
+(cd frontend && npm run dev) &
 
 echo ""
 read -p "¿Deseas iniciar Ngrok para acceso desde el celular? (y/N): " choice
 case "$choice" in 
   y|Y ) 
     echo -e "${GREEN}[3/3] Iniciando túnel Ngrok...${NC}"
-    cd frontend && npm run dev:tunnel &
-    NGROK_PID=$!
-    cd ..
+    (cd frontend && npm run dev:tunnel) &
     ;;
   * ) 
     echo -e "${YELLOW}Omitiendo Ngrok. Modo Localhost únicamente.${NC}"
