@@ -7,7 +7,6 @@ import (
 	"log"
 	"math/big"
 	"net/http"
-	"strings"
 	"sync"
 	"time"
 
@@ -150,19 +149,8 @@ func (s *Store) Cleanup() {
 
 var upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool {
-		// Seguridad CORS: Solo permitir orígenes de localhost o red local 192.168.x.x
-		origin := r.Header.Get("Origin")
-		if origin == "" {
-			return true // Permitir clientes no-browser que no envían Origin (como curl o tools CLI)
-		}
-		// Validar (simplificado): localhost, 127.0.0.1, y redes privadas (LAN, Hotspot, Tailscale, VPNs)
-		if strings.Contains(origin, "localhost") || strings.Contains(origin, "127.0.0.1") || 
-			strings.Contains(origin, "192.168.") || strings.Contains(origin, "10.") || 
-			strings.Contains(origin, "172.") || strings.Contains(origin, "100.") {
-			return true
-		}
-		log.Printf("Origen denegado: %s", origin)
-		return false
+		// Permitir cualquier origen temporalmente para que funcionen túneles como Ngrok
+		return true
 	},
 }
 
