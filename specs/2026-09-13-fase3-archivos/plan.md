@@ -20,7 +20,7 @@
 2. Diseñar e inyectar el componente UI correspondiente: En lugar de un `<textarea>` o una `<img>`, debe mostrar un contenedor con el ícono de un documento, el nombre (`filename` enviado desde el servidor) y un botón prominente de "Descargar".
 3. Al hacer clic en descargar, convertir el Payload binario recibido en un Blob temporal (`URL.createObjectURL(blob)`), forzar la descarga usando un `<a download="filename">` invisible y limpiar la memoria (`URL.revokeObjectURL`).
 
-## Grupo 5: Pruebas Funcionales (Archivos + Tunnel)
+## Grupo 5: Pruebas Funcionales (Archivos + Tunnel) [HECHO]
 1. Iniciar los servidores: Backend Go (`go run main.go`), y el tunnel (`npm run dev:tunnel` o `ngrok`).
 2. Acceder a la URL de Ngrok desde el dispositivo móvil.
 3. Enviar un archivo de texto o PDF desde la PC (emisor).

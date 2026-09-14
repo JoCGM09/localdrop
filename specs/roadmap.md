@@ -9,7 +9,7 @@
 - [x] **Fase 2: Transferencia de imágenes**
   - Soporte de envíos binarios en memoria para mime types de imágenes.
   - Funcionalidad de subir, enviar y previsualizar imágenes en ambos clientes.
-- [ ] **Fase 3: Transferencia de archivos pequeños**
+- [x] **Fase 3: Transferencia de archivos pequeños**
   - Soporte genérico para documentos (ej. .pdf, .docx).
   - Aplicación de límite estricto de tamaño de archivo (ej. 50MB) desde cliente y servidor.
 - [ ] **Fase 4: Pulido final y manejo de fallos**

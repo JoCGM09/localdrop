@@ -102,6 +102,13 @@ func (s *Store) Retrieve(pin string, receiver *websocket.Conn) (ClipboardItem, e
 		s.failedAttempts[receiver]++
 		return ClipboardItem{}, fmt.Errorf("PIN no encontrado o expirado")
 	}
+
+	// Validar expiración explícitamente al recuperar para evitar ventana de limpieza
+	if time.Now().After(item.ExpiresAt) {
+		delete(s.items, pin)
+		s.failedAttempts[receiver]++
+		return ClipboardItem{}, fmt.Errorf("PIN no encontrado o expirado")
+	}
 	
 	// Éxito: borrar pin y resetear fallos (si aplicara)
 	delete(s.items, pin)
