@@ -16,7 +16,7 @@
 1. Ajustar los estados visuales (`state-waiting`, `state-success`) añadiendo micro-interacciones (ej. transiciones suaves de opacidad) al cambiar entre ellos en lugar de un cambio abrupto `display: none/block`.
 2. Validar que la interfaz se reinicie correctamente sin fugas de memoria al presionar "Volver" o cancelar el envío en cualquier punto.
 
-## Grupo 4: Automatización y Empaquetado
+## Grupo 4: Automatización y Empaquetado [HECHO]
 1. Crear un script en la raíz del proyecto (ej. `start.bat` o `start.sh`) que realice las siguientes acciones en paralelo:
    - Levantar el servidor Go en el directorio `backend` (`go run main.go`).
    - Levantar el servidor Astro en el directorio `frontend` (`npm run dev`).
