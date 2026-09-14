@@ -1,8 +1,9 @@
 # Plan de Implementación: Fase 3 - Archivos y Ngrok
 
-## Grupo 1: Configuración de Entorno (Ngrok)
+## Grupo 1: Configuración de Entorno (Ngrok) [HECHO]
 1. Instalar `ngrok` de manera local o requerir su uso mediante `npx` en el proyecto Frontend.
 2. Añadir un script al `package.json` de Astro (ej. `"dev:tunnel": "ngrok http 4321"`) o un comando similar que facilite la exposición pública del puerto local de Astro para resolver las limitaciones de red LAN reportadas.
+3. Se añadió proxy de WebSocket al `astro.config.mjs` para que un solo túnel ngrok soporte frontend y backend al mismo tiempo.
 
 ## Grupo 2: Backend (Metadatos Generales)
 1. Adaptar el `ClipboardItem` en `backend/main.go` para manejar un tipo de payload genérico (ej. `PayloadType: "file"`).

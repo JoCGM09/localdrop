@@ -2,11 +2,11 @@
 
 <!-- Generado/actualizado por /constitution. Fases MUY pequeñas: cada fase debe ser demostrable de principio a fin, no una capa técnica aislada ("no: construir toda la capa de base de datos" / "sí: el usuario puede ver la lista de franjas horarias disponibles"). -->
 
-- [ ] **Fase 1: Conexión básica y transferencia de texto**
+- [x] **Fase 1: Conexión básica y transferencia de texto**
   - Interfaz web simple (Astro) y backend base (Go).
   - Generación y validación de código PIN de seguridad.
   - Envío y recepción bidireccional fiable exclusivamente de texto plano/clipboard.
-- [ ] **Fase 2: Transferencia de imágenes**
+- [x] **Fase 2: Transferencia de imágenes**
   - Soporte de envíos binarios en memoria para mime types de imágenes.
   - Funcionalidad de subir, enviar y previsualizar imágenes en ambos clientes.
 - [ ] **Fase 3: Transferencia de archivos pequeños**

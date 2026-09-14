@@ -238,11 +238,10 @@ import Layout from '../layouts/Layout.astro';
 		if(errorMsg) errorMsg.classList.add('hidden');
 		btnGeneratePin.disabled = true;
 
-		// Conectar al WebSocket del backend Go
+		// Conectar al WebSocket proxificado por Vite/Astro para evitar problemas con Ngrok
 		const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-		const host = window.location.hostname || 'localhost';
-		// Asumiendo que el backend de Go corre en el puerto 8080
-		ws = new WebSocket(`${protocol}//${host}:8080/ws`);
+		const host = window.location.host; // Usa el host actual (ej. de ngrok)
+		ws = new WebSocket(`${protocol}//${host}/ws`);
 
 		ws.onopen = () => {
 			ws?.send(JSON.stringify({
@@ -351,8 +350,8 @@ import Layout from '../layouts/Layout.astro';
 		if(recErrorMsg) recErrorMsg.classList.add('hidden');
 		
 		const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-		const host = window.location.hostname || 'localhost';
-		recWs = new WebSocket(`${protocol}//${host}:8080/ws`);
+		const host = window.location.host;
+		recWs = new WebSocket(`${protocol}//${host}/ws`);
 		
 		recWs.onopen = () => {
 			recWs?.send(JSON.stringify({

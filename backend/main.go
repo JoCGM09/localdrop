@@ -53,6 +53,10 @@ func NewStore() *Store {
 func (s *Store) GeneratePIN() string {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	return s.generatePINUnsafe()
+}
+
+func (s *Store) generatePINUnsafe() string {
 	for {
 		// Generar número seguro entre 0 y 9999
 		n, err := rand.Int(rand.Reader, big.NewInt(10000))
@@ -70,17 +74,15 @@ func (s *Store) GeneratePIN() string {
 // Save guarda el dato, controla el límite por conexión, y retorna el PIN.
 func (s *Store) Save(item ClipboardItem) (string, error) {
 	s.mu.Lock()
+	defer s.mu.Unlock()
+
 	if s.pinsCount[item.Sender] >= MaxPINsPerConn {
-		s.mu.Unlock()
 		return "", fmt.Errorf("límite de PINs alcanzado (max %d)", MaxPINsPerConn)
 	}
-	s.mu.Unlock()
 
-	pin := s.GeneratePIN()
+	pin := s.generatePINUnsafe()
 	item.ExpiresAt = time.Now().Add(5 * time.Minute)
 
-	s.mu.Lock()
-	defer s.mu.Unlock()
 	s.items[pin] = item
 	s.pinsCount[item.Sender]++
 	return pin, nil
@@ -125,14 +127,24 @@ func (s *Store) RemoveByConnection(conn *websocket.Conn) {
 func (s *Store) RunCleanup() {
 	ticker := time.NewTicker(1 * time.Minute)
 	for range ticker.C {
-		now := time.Now()
-		s.mu.Lock()
-		for pin, item := range s.items {
-			if now.After(item.ExpiresAt) {
-				delete(s.items, pin)
+		s.Cleanup()
+	}
+}
+
+// Cleanup realiza una pasada de limpieza de pines expirados.
+func (s *Store) Cleanup() {
+	now := time.Now()
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	for pin, item := range s.items {
+		if now.After(item.ExpiresAt) {
+			delete(s.items, pin)
+			if item.Sender != nil {
+				if count, ok := s.pinsCount[item.Sender]; ok && count > 0 {
+					s.pinsCount[item.Sender]--
+				}
 			}
 		}
-		s.mu.Unlock()
 	}
 }
 

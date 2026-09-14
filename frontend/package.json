@@ -6,7 +6,8 @@
     "node": ">=22.12.0"
   },
   "scripts": {
-    "dev": "astro dev",
+    "dev": "astro dev --host",
+    "dev:tunnel": "ngrok http 4321",
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro"
