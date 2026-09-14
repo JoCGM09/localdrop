@@ -546,9 +546,14 @@ import Layout from '../layouts/Layout.astro';
 				showError('El texto no puede estar vacío');
 				return;
 			}
-		} else {
+		} else if (currentSendMode === 'file') {
 			if (!selectedFile) {
 				showError('Debes seleccionar un archivo primero');
+				return;
+			}
+		} else if (currentSendMode === 'image') {
+			if (!selectedImageFile) {
+				showError('Debes pegar una imagen primero (Ctrl+V)');
 				return;
 			}
 		}
@@ -572,6 +577,13 @@ import Layout from '../layouts/Layout.astro';
 					action: 'send_file',
 					filename: selectedFile.name
 				}));
+			} else if (currentSendMode === 'image' && selectedImageFile) {
+				// Generamos un nombre genérico con la extensión inferida del type (ej. image/png -> .png)
+				const ext = selectedImageFile.type.split('/')[1] || 'png';
+				ws?.send(JSON.stringify({
+					action: 'send_file',
+					filename: `clipboard-image.${ext}`
+				}));
 			}
 		};
 
@@ -581,8 +593,10 @@ import Layout from '../layouts/Layout.astro';
 				
 				if (data.action === 'ready_for_binary') {
 					// El servidor está listo para recibir el archivo binario
-					if (selectedFile && ws) {
+					if (currentSendMode === 'file' && selectedFile && ws) {
 						ws.send(selectedFile);
+					} else if (currentSendMode === 'image' && selectedImageFile && ws) {
+						ws.send(selectedImageFile);
 					}
 				} else if (data.action === 'pin_generated') {
 					showWaitingState(data.pin);
