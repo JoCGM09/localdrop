@@ -29,6 +29,7 @@ import Layout from '../layouts/Layout.astro';
 					<div class="flex bg-slate-100 rounded-md p-1 mb-4">
 						<button id="send-type-text" class="flex-1 py-1.5 text-sm font-medium rounded bg-white shadow-sm text-text-main transition-all">Texto</button>
 						<button id="send-type-file" class="flex-1 py-1.5 text-sm font-medium rounded text-text-secondary hover:text-text-main transition-all">Archivo</button>
+						<button id="send-type-image" class="flex-1 py-1.5 text-sm font-medium rounded text-text-secondary hover:text-text-main transition-all">Imagen</button>
 					</div>
 
 					<!-- Contenedor Texto -->
@@ -68,6 +69,28 @@ import Layout from '../layouts/Layout.astro';
 								</div>
 							</div>
 							<button id="btn-remove-file" class="text-slate-400 hover:text-error p-1 rounded transition-colors" title="Quitar archivo">
+								<svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+							</button>
+						</div>
+					</div>
+
+					<!-- Contenedor Imagen (Portapapeles) -->
+					<div id="image-container" class="hidden space-y-2">
+						<label class="block font-medium">Pegar Imagen (Ctrl+V)</label>
+						
+						<!-- Dropzone Area para Imagen -->
+						<div id="image-dropzone" class="border-2 border-dashed border-slate-300 rounded-lg p-8 flex flex-col items-center justify-center text-center hover:bg-slate-50 transition-colors h-48 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" tabindex="0">
+							<svg class="h-10 w-10 text-slate-400 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+							</svg>
+							<p class="text-sm font-medium text-text-main">Haz clic aquí y presiona Ctrl+V</p>
+							<p class="text-xs text-slate-500 mt-1">Pega una imagen directamente desde tu portapapeles</p>
+						</div>
+
+						<!-- Image Preview (Hidden by default) -->
+						<div id="image-preview-container" class="hidden relative border border-slate-200 rounded-lg overflow-hidden bg-slate-50 flex items-center justify-center h-48">
+							<img id="image-preview-element" class="max-h-full max-w-full object-contain" src="" alt="Preview de la imagen" />
+							<button id="btn-remove-image" class="absolute top-2 right-2 bg-white/90 shadow-sm text-slate-500 hover:text-error p-1.5 rounded-full transition-colors backdrop-blur-sm" title="Quitar imagen">
 								<svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
 							</button>
 						</div>
@@ -244,8 +267,10 @@ import Layout from '../layouts/Layout.astro';
 	// Elementos UI Tipo de Envío (Tabs internos)
 	const btnSendTypeText = document.getElementById('send-type-text');
 	const btnSendTypeFile = document.getElementById('send-type-file');
+	const btnSendTypeImage = document.getElementById('send-type-image');
 	const containerText = document.getElementById('text-container');
 	const containerFile = document.getElementById('file-container');
+	const containerImage = document.getElementById('image-container');
 	
 	// Elementos UI Dropzone
 	const dropzone = document.getElementById('dropzone');
@@ -255,9 +280,17 @@ import Layout from '../layouts/Layout.astro';
 	const lblFileSize = document.getElementById('file-size');
 	const btnRemoveFile = document.getElementById('btn-remove-file');
 
+	// Elementos UI Imagen (Portapapeles)
+	const imageDropzone = document.getElementById('image-dropzone');
+	const imagePreviewContainer = document.getElementById('image-preview-container');
+	const imagePreviewElement = document.getElementById('image-preview-element') as HTMLImageElement;
+	const btnRemoveImage = document.getElementById('btn-remove-image');
+
 	let ws: WebSocket | null = null;
-	let currentSendMode: 'text' | 'file' = 'text';
+	let currentSendMode: 'text' | 'file' | 'image' = 'text';
 	let selectedFile: File | null = null;
+	let selectedImageFile: File | null = null;
+	let selectedImageBlobUrl: string = '';
 	const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
 
 	// Utilidad para transiciones suaves
@@ -287,32 +320,47 @@ import Layout from '../layouts/Layout.astro';
 	};
 
 	// --- Lógica de Tabs internos ---
+	const updateTabUI = (activeBtn: HTMLElement | null, inactiveBtns: (HTMLElement | null)[]) => {
+		activeBtn?.classList.replace('text-text-secondary', 'text-text-main');
+		activeBtn?.classList.replace('hover:text-text-main', 'bg-white');
+		activeBtn?.classList.add('shadow-sm');
+
+		inactiveBtns.forEach(btn => {
+			btn?.classList.replace('text-text-main', 'text-text-secondary');
+			btn?.classList.replace('bg-white', 'hover:text-text-main');
+			btn?.classList.remove('shadow-sm');
+		});
+	};
+
 	btnSendTypeText?.addEventListener('click', () => {
 		currentSendMode = 'text';
-		btnSendTypeText.classList.replace('text-text-secondary', 'text-text-main');
-		btnSendTypeText.classList.replace('hover:text-text-main', 'bg-white');
-		btnSendTypeText.classList.add('shadow-sm');
-		
-		btnSendTypeFile?.classList.replace('text-text-main', 'text-text-secondary');
-		btnSendTypeFile?.classList.replace('bg-white', 'hover:text-text-main');
-		btnSendTypeFile?.classList.remove('shadow-sm');
+		updateTabUI(btnSendTypeText, [btnSendTypeFile, btnSendTypeImage]);
 
 		containerText?.classList.replace('hidden', 'block');
 		containerFile?.classList.replace('block', 'hidden');
+		containerImage?.classList.replace('block', 'hidden');
 	});
 
 	btnSendTypeFile?.addEventListener('click', () => {
 		currentSendMode = 'file';
-		btnSendTypeFile.classList.replace('text-text-secondary', 'text-text-main');
-		btnSendTypeFile.classList.replace('hover:text-text-main', 'bg-white');
-		btnSendTypeFile.classList.add('shadow-sm');
-		
-		btnSendTypeText?.classList.replace('text-text-main', 'text-text-secondary');
-		btnSendTypeText?.classList.replace('bg-white', 'hover:text-text-main');
-		btnSendTypeText?.classList.remove('shadow-sm');
+		updateTabUI(btnSendTypeFile, [btnSendTypeText, btnSendTypeImage]);
 
 		containerFile?.classList.replace('hidden', 'block');
 		containerText?.classList.replace('block', 'hidden');
+		containerImage?.classList.replace('block', 'hidden');
+	});
+
+	btnSendTypeImage?.addEventListener('click', () => {
+		currentSendMode = 'image';
+		updateTabUI(btnSendTypeImage, [btnSendTypeText, btnSendTypeFile]);
+
+		containerImage?.classList.replace('hidden', 'block');
+		containerText?.classList.replace('block', 'hidden');
+		containerFile?.classList.replace('block', 'hidden');
+		
+		// Dar foco automático al área de pegado de imagen
+		const imgDropzone = document.getElementById('image-dropzone');
+		if (imgDropzone) setTimeout(() => imgDropzone.focus(), 50);
 	});
 
 	// --- Lógica Dropzone y Archivos ---
@@ -345,8 +393,22 @@ import Layout from '../layouts/Layout.astro';
 		dropzone?.classList.replace('hidden', 'flex');
 	};
 
+	const removeImage = () => {
+		selectedImageFile = null;
+		if (selectedImageBlobUrl) {
+			URL.revokeObjectURL(selectedImageBlobUrl);
+			selectedImageBlobUrl = '';
+		}
+		if (imagePreviewElement) imagePreviewElement.src = '';
+		
+		imagePreviewContainer?.classList.replace('flex', 'hidden');
+		imageDropzone?.classList.replace('hidden', 'flex');
+		imageDropzone?.focus();
+	};
+
 	dropzone?.addEventListener('click', () => fileInput?.click());
 	btnRemoveFile?.addEventListener('click', removeFile);
+	btnRemoveImage?.addEventListener('click', removeImage);
 
 	fileInput?.addEventListener('change', (e) => {
 		const target = e.target as HTMLInputElement;
@@ -399,6 +461,7 @@ import Layout from '../layouts/Layout.astro';
 		}
 		txtToSend.value = '';
 		removeFile();
+		removeImage();
 		btnGeneratePin.disabled = false;
 		
 		transitionState([stateWaiting, stateSuccess], [stateInitial], 'block');

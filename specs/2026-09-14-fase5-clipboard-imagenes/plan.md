@@ -1,6 +1,6 @@
 # Plan de Implementación: Fase 5 - Portapapeles de Imágenes
 
-## Grupo 1: Interfaz Base de "Imagen" (Emisor)
+## Grupo 1: Interfaz Base de "Imagen" (Emisor) [HECHO]
 1. En `index.astro`, modificar el grupo de Tabs interno (`send-type-*`) para incluir el tercer botón "Imagen".
 2. Crear un nuevo contenedor `image-container` que reemplace dinámicamente al de Texto y Archivo cuando se seleccione.
 3. El `image-container` debe incluir:
