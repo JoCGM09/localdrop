@@ -5,7 +5,7 @@
 2. Añadir un script al `package.json` de Astro (ej. `"dev:tunnel": "ngrok http 4321"`) o un comando similar que facilite la exposición pública del puerto local de Astro para resolver las limitaciones de red LAN reportadas.
 3. Se añadió proxy de WebSocket al `astro.config.mjs` para que un solo túnel ngrok soporte frontend y backend al mismo tiempo.
 
-## Grupo 2: Backend (Metadatos Generales)
+## Grupo 2: Backend (Metadatos Generales) [HECHO]
 1. Adaptar el `ClipboardItem` en `backend/main.go` para manejar un tipo de payload genérico (ej. `PayloadType: "file"`).
 2. Añadir el campo `FileName` (string) al `ClipboardItem` y al `WSMessage`, necesario para que el receptor sepa cómo se llama el archivo original y su extensión.
 3. Asegurar que las validaciones de límite (ya ajustadas a 52MB en la fase previa) aplican también a esta nueva modalidad.

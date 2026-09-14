@@ -22,10 +22,10 @@ const (
 
 // ClipboardItem representa un dato guardado temporalmente (texto o binario).
 type ClipboardItem struct {
-	PayloadType string // "text" o "image"
+	PayloadType string // "text", "image", o "file"
 	Text        string
 	Binary      []byte
-	Ext         string // Extensión para la imagen, ej: "png"
+	FileName    string // Nombre original del archivo, ej: "foto.png" o "doc.pdf"
 	Sender      *websocket.Conn
 	ExpiresAt   time.Time
 }
@@ -155,10 +155,10 @@ var upgrader = websocket.Upgrader{
 }
 
 type WSMessage struct {
-	Action  string `json:"action"`
-	Payload string `json:"payload,omitempty"`
-	PIN     string `json:"pin,omitempty"`
-	Ext     string `json:"ext,omitempty"`
+	Action   string `json:"action"`
+	Payload  string `json:"payload,omitempty"`
+	PIN      string `json:"pin,omitempty"`
+	FileName string `json:"filename,omitempty"`
 }
 
 func handleConnections(w http.ResponseWriter, r *http.Request, store *Store) {
@@ -174,7 +174,8 @@ func handleConnections(w http.ResponseWriter, r *http.Request, store *Store) {
 	conn.SetReadLimit(MaxPayloadSize)
 
 	var waitingForBinary bool
-	var expectedExt string
+	var expectedFileName string
+	var expectedPayloadType string
 
 	for {
 		messageType, p, err := conn.ReadMessage()
@@ -190,9 +191,9 @@ func handleConnections(w http.ResponseWriter, r *http.Request, store *Store) {
 				continue // Ignorar binarios no esperados
 			}
 			pin, err := store.Save(ClipboardItem{
-				PayloadType: "image",
+				PayloadType: expectedPayloadType,
 				Binary:      p,
-				Ext:         expectedExt,
+				FileName:    expectedFileName,
 				Sender:      conn,
 			})
 			waitingForBinary = false
@@ -236,8 +237,9 @@ func handleConnections(w http.ResponseWriter, r *http.Request, store *Store) {
 				"pin":    pin,
 			})
 
-		case "send_image":
-			expectedExt = msg.Ext
+		case "send_image", "send_file": // Soportamos ambos para mantener compatibilidad semántica
+			expectedFileName = msg.FileName
+			expectedPayloadType = "file" // Unificamos el trato de binarios bajo "file"
 			waitingForBinary = true
 			conn.WriteJSON(map[string]string{
 				"action": "ready_for_binary",
@@ -256,11 +258,11 @@ func handleConnections(w http.ResponseWriter, r *http.Request, store *Store) {
 				continue
 			}
 
-			if item.PayloadType == "image" {
+			if item.PayloadType == "file" || item.PayloadType == "image" {
 				// Enviar metadatos
 				conn.WriteJSON(map[string]string{
-					"action": "image_received",
-					"ext":    item.Ext,
+					"action":   "file_received",
+					"filename": item.FileName,
 				})
 				// Enviar binario
 				conn.WriteMessage(websocket.BinaryMessage, item.Binary)
