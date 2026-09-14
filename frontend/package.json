@@ -7,7 +7,7 @@
   },
   "scripts": {
     "dev": "astro dev --host",
-    "dev:tunnel": "ngrok http http://localhost:4321",
+    "dev:tunnel": "ngrok http 127.0.0.1:4321",
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro"
