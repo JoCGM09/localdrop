@@ -441,7 +441,7 @@ import Layout from '../layouts/Layout.astro';
 		
 		imageDropzone?.classList.replace('flex', 'hidden');
 		imagePreviewContainer?.classList.replace('hidden', 'flex');
-	};
+	const handleFileSelection = (file: File) => {
 		if (file.size > MAX_FILE_SIZE) {
 			window.showToast(`El archivo es muy grande (${formatBytes(file.size)}). El máximo es 50MB.`, 'error');
 			return;
